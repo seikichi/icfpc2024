@@ -1,5 +1,3 @@
-extern crate core;
-
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

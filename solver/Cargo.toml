@@ -1,0 +1,6 @@
+[workspace]
+members = ["core", "cli", "wasm"]
+
+# for flamegraph
+#[profile.release]
+#debug = true

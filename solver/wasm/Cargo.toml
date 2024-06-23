@@ -17,6 +17,7 @@ console_error_panic_hook = { version = "0.1.7", optional = true }
 [dev-dependencies]
 wasm-bindgen-test = "0.3.42"
 
-[profile.release]
-# Tell `rustc` to optimize for small code size.
-opt-level = "s"
+# NOTE: profiles for the non root package will be ignored...
+# [profile.release]
+# # Tell `rustc` to optimize for small code size.
+# opt-level = "s"

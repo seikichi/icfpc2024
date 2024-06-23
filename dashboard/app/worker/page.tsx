@@ -9,6 +9,7 @@ export default function Page() {
   useEffect(() => {
     const worker = new Worker(new URL("./wasm.worker.ts", import.meta.url));
     worker.onmessage = (ev: MessageEvent<number>) => {
+      console.log("onmessage", ev);
       setAnswer(`${ev.data}`);
     };
     worker.postMessage([40, 2]);

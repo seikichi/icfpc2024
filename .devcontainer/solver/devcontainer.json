@@ -1,5 +1,6 @@
 {
   "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "workspaceFolder": "/workspace/solver",
   "features": {
     "ghcr.io/devcontainers/features/rust:1": {}
   }

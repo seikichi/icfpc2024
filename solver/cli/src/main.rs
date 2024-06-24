@@ -9,7 +9,7 @@ use anyhow::bail;
 use structopt::StructOpt;
 
 fn main() -> anyhow::Result<()> {
-    println!("add(40, 2) == {:?}", add(40, 2));
+    println!("add(40, 2) is {:?}", add(40, 2));
     run()?;
     Ok(())
 }

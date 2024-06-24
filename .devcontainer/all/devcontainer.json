@@ -1,0 +1,6 @@
+{
+	"name": "icfpc2024 (all)",
+	"dockerComposeFile": "./docker-compose.yml",
+	"service": "dashboard",
+	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}"
+}

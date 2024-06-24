@@ -27,6 +27,17 @@ export class InfraStack extends cdk.Stack {
       ],
     });
 
+    // https://benlimmer.com/2024/04/08/caching-cdk-dockerimageasset-github-actions/
+    const isCI = process.env.CI !== undefined;
+    const ciCacheOptions = {
+      cacheTo: {
+        type: "gha",
+        params: { mode: "max" },
+      },
+      cacheFrom: [{ type: "gha" }],
+      outputs: ["type=docker"],
+    };
+
     // NOTE: to run the following image manually,
     // 1. docker build -t seikichi/ifcpf2024-lambda -f lambda/Dockerfile .
     // 2. docker run --rm -p 9000:8080 seikichi/ifcpf2024-lambda lambda.handler
@@ -35,6 +46,7 @@ export class InfraStack extends cdk.Stack {
       code: lambda.DockerImageCode.fromImageAsset("../", {
         file: "lambda/Dockerfile",
         cmd: ["lambda.handler"],
+        ...(isCI ? ciCacheOptions : {}),
       }),
       timeout: cdk.Duration.minutes(15),
       memorySize: 4096,

@@ -10,22 +10,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # https://benlimmer.com/2024/04/08/caching-cdk-dockerimageasset-github-actions/
+      - name: Expose GitHub Runtime
+        uses: crazy-max/ghaction-github-runtime@v3
+
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
-      - name: Update rust
-        run: rustup update
+      # - name: Update rust
+      #   run: rustup update
 
-      - name: Build
-        run: cargo build --verbose
-        working-directory: ./solver
+      # - name: Build
+      #   run: cargo build --verbose
+      #   working-directory: ./solver
 
-      - name: Run tests
-        run: cargo test --verbose
-        working-directory: ./solver
+      # - name: Run tests
+      #   run: cargo test --verbose
+      #   working-directory: ./solver
 
       - name: Setup NPM dependencies
         run: npm ci

@@ -12,11 +12,22 @@ COPY lambda/package.json lambda/package-lock.json lambda/*.ts lambda/tsconfig.js
 # RUN npm install && npm run prisma:generate && npm run build
 RUN npm install && npm run build
 
-# TODO: speedup
+# Cache Rust dependencies with Docker build
+# see: https://stackoverflow.com/questions/58473606
 COPY solver/Cargo.lock solver/Cargo.toml ./
-COPY solver/core/ core/
-COPY solver/cli/ cli/
-COPY solver/wasm/ wasm/
+COPY solver/wasm/Cargo.toml ./wasm/
+RUN mkdir -p ./wasm/src && echo "fn f() {}" > ./wasm/src/lib.rs
+COPY solver/core/Cargo.toml ./core/
+RUN mkdir -p ./core/src && echo "fn f() {}" > ./core/src/lib.rs
+COPY solver/cli/Cargo.toml ./cli/
+RUN mkdir -p ./cli/src && echo "fn main() { println!(\"dummy\"); }" > ./cli/src/main.rs
+RUN cargo build --release
+
+COPY solver/wasm ./wasm
+COPY solver/core ./core
+COPY solver/cli ./cli
+
+RUN touch ./wasm/src/lib.rs ./core/src/lib.rs ./cli/src/main.rs
 RUN cargo build --release
 
 # CMD ["lambda.handler"]

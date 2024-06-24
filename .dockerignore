@@ -1,0 +1,8 @@
+.git
+infra
+
+**/node_modules
+**/.env
+**/target
+**/.next
+**/problems

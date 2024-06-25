@@ -4,6 +4,16 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as child_process from "child_process";
 
+import "dotenv/config";
+import { z } from "zod";
+
+const Env = z.object({
+  POSTGRES_PRISMA_URL: z.string(),
+  POSTGRES_URL_NON_POOLING: z.string(),
+});
+
+const env = Env.parse(process.env);
+
 export class InfraStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -50,10 +60,12 @@ export class InfraStack extends cdk.Stack {
           : {}),
       }),
       timeout: cdk.Duration.minutes(15),
-      memorySize: 4096,
+      memorySize: 256,
       environment: {
         COMMIT_ID: commitHash,
         BUCKET: bucket.bucketName,
+        POSTGRES_PRISMA_URL: env.POSTGRES_PRISMA_URL,
+        POSTGRES_URL_NON_POOLING: env.POSTGRES_URL_NON_POOLING,
       },
     });
 

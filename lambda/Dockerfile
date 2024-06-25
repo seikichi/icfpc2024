@@ -7,10 +7,10 @@ ENV PATH $PATH:/root/.cargo/bin
 RUN rustup install stable
 
 WORKDIR ${LAMBDA_TASK_ROOT}
-# COPY dashboard/prisma/schema.prisma ./prisma/schema.prisma
+COPY dashboard/prisma/schema.prisma ./prisma/schema.prisma
 COPY lambda/package.json lambda/package-lock.json lambda/*.ts lambda/tsconfig.json ./
 # RUN npm install && npm run prisma:generate && npm run build
-RUN npm install && npm run build
+RUN npm install && npm run prisma:generate && npm run build
 
 # Cache Rust dependencies with Docker build
 # see: https://stackoverflow.com/questions/58473606

@@ -59,11 +59,29 @@ export class InfraStack extends cdk.Stack {
 
     bucket.grantReadWrite(solver);
 
-    // The code that defines your stack goes here
-
-    // example resource
-    // const queue = new sqs.Queue(this, 'InfraQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    // Lambda Example
+    const exampleFn = new lambda.DockerImageFunction(this, "Example", {
+      code: lambda.DockerImageCode.fromImageAsset("../", {
+        file: "lambda/Dockerfile",
+        cmd: ["example.handler"],
+        ...(isCI
+          ? {
+              cacheTo: {
+                type: "gha",
+                params: { mode: "max", scope: "example" },
+              },
+              cacheFrom: [{ type: "gha", params: { scope: "example" } }],
+              outputs: ["type=docker"],
+            }
+          : {}),
+      }),
+      timeout: cdk.Duration.minutes(15),
+      memorySize: 4096,
+      environment: {
+        COMMIT_ID: commitHash,
+        BUCKET: bucket.bucketName,
+      },
+    });
+    bucket.grantReadWrite(exampleFn);
   }
 }

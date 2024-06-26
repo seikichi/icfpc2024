@@ -97,7 +97,7 @@ export default function Forms() {
                 >
                   Go back
                 </Button>
-                <Button type="submit" className="w-full sm:w-fit" type="button">
+                <Button type="button" className="w-full sm:w-fit">
                   Add workspace
                 </Button>
               </div>

@@ -11,6 +11,7 @@ export const siteConfig = {
     charts: "/charts",
     db: "/db",
     wasm: "/wasm",
+    forms: "/forms",
   },
 };
 

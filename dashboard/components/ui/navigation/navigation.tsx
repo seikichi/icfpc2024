@@ -8,6 +8,7 @@ import {
   RiCodeLine,
   RiDatabaseLine,
   RiLinkM,
+  RiInputField,
 } from "@remixicon/react";
 
 export const navigation = [
@@ -22,6 +23,7 @@ export const navigation = [
   { name: "Charts", href: siteConfig.baseLinks.charts, icon: RiBarChartLine },
   { name: "WASM", href: siteConfig.baseLinks.wasm, icon: RiCodeLine },
   { name: "Database", href: siteConfig.baseLinks.db, icon: RiDatabaseLine },
+  { name: "Forms", href: siteConfig.baseLinks.forms, icon: RiInputField },
 ] as const;
 
 export const shortcuts = [

@@ -18,8 +18,8 @@ export const navigation = [
   //     href: siteConfig.baseLinks.settings,
   //     icon: RiSettings5Line,
   //   },
-  { name: "Tables", href: "#", icon: RiTableLine },
-  { name: "Charts", href: "#", icon: RiBarChartLine },
+  { name: "Tables", href: siteConfig.baseLinks.tables, icon: RiTableLine },
+  { name: "Charts", href: siteConfig.baseLinks.charts, icon: RiBarChartLine },
   { name: "WASM", href: siteConfig.baseLinks.wasm, icon: RiCodeLine },
   { name: "Database", href: siteConfig.baseLinks.db, icon: RiDatabaseLine },
 ] as const;

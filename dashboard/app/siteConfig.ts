@@ -7,6 +7,8 @@ export const siteConfig = {
     overview: "/overview",
     details: "/details",
     settings: "/settings",
+    tables: "/tables",
+    charts: "/charts",
     db: "/db",
     wasm: "/wasm",
   },

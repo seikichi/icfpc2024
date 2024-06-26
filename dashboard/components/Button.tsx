@@ -1,3 +1,5 @@
+"use client";
+
 // Tremor Raw Button [v0.0.0]
 
 import { Slot } from "@radix-ui/react-slot";

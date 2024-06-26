@@ -25,7 +25,7 @@ const Label = React.forwardRef<
       {
         "text-gray-400 dark:text-gray-600": disabled,
       },
-      className,
+      className
     )}
     aria-disabled={disabled}
     {...props}

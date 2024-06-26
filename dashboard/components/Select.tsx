@@ -1,5 +1,7 @@
 // Tremor Raw Select [v0.0.0]
 
+"use client";
+
 import * as SelectPrimitives from "@radix-ui/react-select";
 import {
   RiArrowDownSLine,

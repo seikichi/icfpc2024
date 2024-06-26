@@ -28,7 +28,7 @@ export const navigation = [
 
 export const shortcuts = [
   {
-    name: "Run Solver (WASM)",
+    name: "Run WASM",
     href: siteConfig.baseLinks.wasm,
     icon: RiLinkM,
   },

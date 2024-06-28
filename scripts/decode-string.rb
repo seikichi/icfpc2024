@@ -1,6 +1,13 @@
 #!/usr/bin/ruby
 
-input = $stdin.read.strip
+if ARGV.size == 0
+    input = $stdin.read.strip
+elsif ARGV.size == 1
+    input = ARGV[0]
+else
+    $stderr.puts "Usage: decode-string.rb [INPUT]"
+end
+
 if input[0] != "S" then
     raise RuntimeError("not a string")
 end

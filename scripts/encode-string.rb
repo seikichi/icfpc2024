@@ -1,6 +1,12 @@
 #!/usr/bin/ruby
 
-input = $stdin.read.strip
+if ARGV.size == 0
+    input = $stdin.read.strip
+elsif ARGV.size == 1
+    input = ARGV[0]
+else
+    $stderr.puts "Usage: encode-string.rb [INPUT]"
+end
 
 table = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`|~ \n"
 rtable = {}

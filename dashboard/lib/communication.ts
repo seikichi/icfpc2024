@@ -12,6 +12,7 @@ export const client = {
       method: "POST",
       headers: { Authorization: `Bearer ${API_TOKEN}` },
       body: icfp.encodeString(body),
+      cache: "no-store",
     });
     if (!res.ok) {
       return err(await res.text());

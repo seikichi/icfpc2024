@@ -1,4 +1,5 @@
 pub mod input;
+pub mod eval;
 pub mod solution;
 
 // NOTE: 動作確認用

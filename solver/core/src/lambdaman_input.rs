@@ -22,7 +22,7 @@ pub fn load_from_file<P: AsRef<Path>>(path: P) -> io::Result<LambdamanInput> {
 
 pub fn load_from_str(s: &str) -> io::Result<LambdamanInput> {
     let mut field = vec![];
-    let lines: Vec<_> = s.lines().collect::<Vec<_>>();
+    let lines: Vec<_> = s.trim().lines().collect::<Vec<_>>();
     for line in lines.iter() {
         let l = line.chars().collect::<Vec<char>>();
         field.push(l);

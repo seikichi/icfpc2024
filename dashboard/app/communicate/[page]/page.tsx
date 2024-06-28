@@ -1,5 +1,6 @@
 import { client } from "@/lib/communication";
 import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export const dynamic = "force-dynamic";
 
@@ -17,5 +18,5 @@ export default async function Page({ params }: { params: { page: string } }) {
     "[$1](/communicate/$1)"
   );
   console.log(source);
-  return <Markdown>{source}</Markdown>;
+  return <Markdown remarkPlugins={[remarkGfm]}>{source}</Markdown>;
 }

@@ -10,6 +10,7 @@ pub trait HeadAI {
 }
 
 pub trait ChainedAI {
+    #[allow(dead_code)]
     fn solve(
         &mut self,
         input: &lambdaman_input::LambdamanInput,

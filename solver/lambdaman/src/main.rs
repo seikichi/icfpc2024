@@ -73,8 +73,8 @@ struct Opt {
 }
 
 // 標準出力に JSON 形式で出力し、Lambda の JS が DB に書き込む
-#[derive(Debug, serde::Serialize)]
-struct Output {}
+// #[derive(Debug, serde::Serialize)]
+// struct Output {}
 
 fn parse_ai_string(
     ai_str: &str,
@@ -147,7 +147,7 @@ pub fn run() -> anyhow::Result<()> {
 
     let original_input = lambdaman_input::load_from_file(opt.input_path.clone())?;
 
-    let mut solution = head_ai.solve(&original_input);
+    let solution = head_ai.solve(&original_input);
     // let mut score_history = vec![];
     // score_history.push(score::calculate_with_volume(&original_input, &solution).unwrap());
 

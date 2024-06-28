@@ -101,7 +101,7 @@ impl Display for Node {
             Node::UnaryOp(op, node) => write!(f, "{op}{node}"),
             Node::BinOp(op, l, r) => write!(f, "({l} {op} {r})"),
             Node::If(cond, then, else_) => write!(f, "if {cond} then {then} else {else_}"),
-            Node::Lambda(var, body) => write!(f, "λ v{var}: {body}"),
+            Node::Lambda(var, body) => write!(f, "[λ v{var}. {body}]"),
             Node::Variable(var) => write!(f, "v{var}"),
         }
     }
@@ -134,7 +134,10 @@ type ParseResult<T> = Result<T, ParseError>;
 
 pub fn tokenize(input: &str) -> Vec<Token> {
     static RE_SPACES: Lazy<Regex> = Lazy::new(|| Regex::new(r"\s+").unwrap());
-    RE_SPACES.split(input).map(|s| s.to_owned()).collect()
+    RE_SPACES
+        .split(input.trim())
+        .map(|s| s.to_owned())
+        .collect()
 }
 
 fn ok(node: Node, rest: &[Token]) -> ParseResult<(Box<Node>, &[Token])> {
@@ -449,15 +452,4 @@ pub fn eval(frame: Rc<Frame>, node: &Node) -> EvalResult<Value> {
         Node::Lambda(var, body) => eval_lambda(frame, *var, Rc::clone(body)),
         Node::Variable(var) => eval_variable(frame, *var),
     }
-}
-
-pub fn eval_str(input: &str) -> anyhow::Result<Value> {
-    let tokens = tokenize(input);
-    let (ast, rest) = parse(&tokens)?;
-    if !rest.is_empty() {
-        Err(ParseError::UnexpectedEof)?;
-    }
-    let frame = Frame::new();
-    let value = eval(Rc::new(frame), &ast)?;
-    Ok(value)
 }

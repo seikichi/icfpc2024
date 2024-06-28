@@ -44,7 +44,7 @@ export default function Page() {
         {response && response.ok && response.value.evaluated && (
           <div>
             <hr />
-            <code style={{ whiteSpace: "pre" }}>
+            <code style={{ whiteSpace: "pre-wrap" }}>
               {response.value.evaluated}
             </code>
           </div>

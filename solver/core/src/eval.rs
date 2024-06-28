@@ -1,14 +1,18 @@
-use std::fmt::{Debug, Display};
+use std::{
+    fmt::{Debug, Display},
+    num::ParseIntError,
+    rc::Rc,
+};
 
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Value {
     Bool(bool),
     Int(i64),
     String(String),
-    Closure(usize),
+    Closure(Rc<Frame>, usize, Rc<Node>),
 }
 
 impl Display for Value {
@@ -17,12 +21,12 @@ impl Display for Value {
             Value::Bool(b) => write!(f, "{b}"),
             Value::Int(i) => write!(f, "{i}"),
             Value::String(s) => write!(f, "{:?}", s),
-            Value::Closure(v) => write!(f, "<closure v{v}>"),
+            Value::Closure(_, v, _) => write!(f, "<closure v{v}>"),
         }
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum UnaryOp {
     Neg,
     Not,
@@ -41,7 +45,7 @@ impl Display for UnaryOp {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum BinOp {
     Add,
     Sub,
@@ -87,7 +91,7 @@ pub enum Node {
     UnaryOp(UnaryOp, Box<Node>),
     BinOp(BinOp, Box<Node>, Box<Node>),
     If(Box<Node>, Box<Node>, Box<Node>),
-    Lambda(usize, Box<Node>),
+    Lambda(usize, Rc<Node>),
 }
 
 impl Display for Node {
@@ -97,7 +101,7 @@ impl Display for Node {
             Node::UnaryOp(op, node) => write!(f, "{op}{node}"),
             Node::BinOp(op, l, r) => write!(f, "({l} {op} {r})"),
             Node::If(cond, then, else_) => write!(f, "if {cond} then {then} else {else_}"),
-            Node::Lambda(var, body) => write!(f, "λ v{var}: {body}"),
+            Node::Lambda(var, body) => write!(f, "[λ v{var}. {body}]"),
             Node::Variable(var) => write!(f, "v{var}"),
         }
     }
@@ -128,9 +132,12 @@ pub enum ParseError {
 
 type ParseResult<T> = Result<T, ParseError>;
 
-fn tokenize(input: &str) -> Vec<Token> {
+pub fn tokenize(input: &str) -> Vec<Token> {
     static RE_SPACES: Lazy<Regex> = Lazy::new(|| Regex::new(r"\s+").unwrap());
-    RE_SPACES.split(input).map(|s| s.to_owned()).collect()
+    RE_SPACES
+        .split(input.trim())
+        .map(|s| s.to_owned())
+        .collect()
 }
 
 fn ok(node: Node, rest: &[Token]) -> ParseResult<(Box<Node>, &[Token])> {
@@ -218,7 +225,7 @@ fn parse_bin_op(body: &str) -> ParseResult<BinOp> {
     }
 }
 
-fn parse(tokens: &[Token]) -> ParseResult<(Box<Node>, &[Token])> {
+pub fn parse(tokens: &[Token]) -> ParseResult<(Box<Node>, &[Token])> {
     let Some(t) = tokens.first() else {
         return Err(ParseError::UnexpectedEof);
     };
@@ -250,7 +257,7 @@ fn parse(tokens: &[Token]) -> ParseResult<(Box<Node>, &[Token])> {
         'L' => {
             let var = parse_integer_raw(body)? as usize;
             let (expr, rest) = parse(&tokens[1..])?;
-            ok(Node::Lambda(var, expr), rest)
+            ok(Node::Lambda(var, Rc::new(*expr)), rest)
         }
         'v' => {
             let var = parse_integer_raw(body)? as usize;
@@ -260,12 +267,189 @@ fn parse(tokens: &[Token]) -> ParseResult<(Box<Node>, &[Token])> {
     }
 }
 
-pub fn eval(input: &str) -> ParseResult<Value> {
-    let tokens = tokenize(input);
-    let (ast, rest) = parse(&tokens)?;
-    if !rest.is_empty() {
-        return Err(ParseError::UnexpectedEof);
+#[derive(Debug, thiserror::Error)]
+pub enum EvalError {
+    #[error("type error: expected a value of type {0}, but the given value is {1}")]
+    TypeError(String, String),
+
+    #[error("value error: {0}")]
+    ValueError(String),
+
+    #[error("undefined variable: v{0}")]
+    UndefinedVariable(usize),
+}
+
+type EvalResult<T> = Result<T, EvalError>;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Frame {
+    variables: im_rc::HashMap<usize, Rc<Value>>,
+}
+
+impl Frame {
+    pub fn new() -> Self {
+        Self {
+            variables: im_rc::HashMap::new(),
+        }
     }
-    println!("AST: {ast}");
-    todo!()
+
+    pub fn lookup(&self, var: usize) -> Option<Rc<Value>> {
+        self.variables.get(&var).cloned()
+    }
+
+    pub fn with_variable(&self, var: usize, value: Rc<Value>) -> Frame {
+        Self {
+            variables: self.variables.update(var, value),
+        }
+    }
+}
+
+macro_rules! type_check {
+    ($value:ident, $pattern:pat, $expected:expr) => {
+        let $pattern = $value else {
+            return Err(EvalError::TypeError($expected.into(), $value.to_string()));
+        };
+    };
+}
+
+fn eval_unary_op(frame: Rc<Frame>, op: UnaryOp, operand: &Node) -> EvalResult<Value> {
+    let inner_value = eval(frame, operand)?;
+    match op {
+        UnaryOp::Neg => {
+            type_check!(inner_value, Value::Int(i), "Int");
+            Ok(Value::Int(-i))
+        }
+        UnaryOp::Not => {
+            type_check!(inner_value, Value::Bool(b), "Bool");
+            Ok(Value::Bool(!b))
+        }
+        UnaryOp::IntToString => {
+            type_check!(inner_value, Value::Int(i), "Int");
+            Ok(Value::String(i.to_string()))
+        }
+        UnaryOp::StringToInt => {
+            type_check!(inner_value, Value::String(s), "String");
+            let i: i64 = s
+                .parse()
+                .map_err(|e: ParseIntError| EvalError::ValueError(e.to_string()))?;
+            Ok(Value::Int(i))
+        }
+    }
+}
+
+fn eval_apply(frame: Rc<Frame>, func: &Node, arg: &Node) -> EvalResult<Value> {
+    // 本来は遅延評価しないといけない
+    let f_value = eval(Rc::clone(&frame), func)?;
+    let a_value = eval(frame, arg)?;
+    type_check!(f_value, Value::Closure(c_frame, c_var, c_body), "Closure");
+    let new_frame = Rc::new(c_frame.with_variable(c_var, Rc::new(a_value)));
+    eval(new_frame, &c_body)
+}
+
+fn eval_bin_op(frame: Rc<Frame>, op: BinOp, lhs: &Node, rhs: &Node) -> EvalResult<Value> {
+    // Apply だけは評価順序が違うので別で実装する
+    if op == BinOp::Apply {
+        return eval_apply(frame, lhs, rhs);
+    }
+    let l_value = eval(Rc::clone(&frame), lhs)?;
+    let r_value = eval(frame, rhs)?;
+    match op {
+        BinOp::Add => {
+            type_check!(l_value, Value::Int(l), "Int");
+            type_check!(r_value, Value::Int(r), "Int");
+            Ok(Value::Int(l + r))
+        }
+        BinOp::Sub => {
+            type_check!(l_value, Value::Int(l), "Int");
+            type_check!(r_value, Value::Int(r), "Int");
+            Ok(Value::Int(l - r))
+        }
+        BinOp::Mul => {
+            type_check!(l_value, Value::Int(l), "Int");
+            type_check!(r_value, Value::Int(r), "Int");
+            Ok(Value::Int(l * r))
+        }
+        BinOp::Div => {
+            type_check!(l_value, Value::Int(l), "Int");
+            type_check!(r_value, Value::Int(r), "Int");
+            Ok(Value::Int(l / r)) // TODO: 丸め方向が正しいかチェックする
+        }
+        BinOp::Mod => {
+            type_check!(l_value, Value::Int(l), "Int");
+            type_check!(r_value, Value::Int(r), "Int");
+            Ok(Value::Int(l % r)) // TODO: 負の数に対する挙動が正しいかチェックする
+        }
+        BinOp::Lt => {
+            type_check!(l_value, Value::Int(l), "Int");
+            type_check!(r_value, Value::Int(r), "Int");
+            Ok(Value::Bool(l < r))
+        }
+        BinOp::Gt => {
+            type_check!(l_value, Value::Int(l), "Int");
+            type_check!(r_value, Value::Int(r), "Int");
+            Ok(Value::Bool(l > r))
+        }
+        BinOp::Eq => Ok(Value::Bool(l_value == r_value)),
+        BinOp::Or => {
+            type_check!(l_value, Value::Bool(l), "Bool");
+            type_check!(r_value, Value::Bool(r), "Bool");
+            Ok(Value::Bool(l || r))
+        }
+        BinOp::And => {
+            type_check!(l_value, Value::Bool(l), "Bool");
+            type_check!(r_value, Value::Bool(r), "Bool");
+            Ok(Value::Bool(l && r))
+        }
+        BinOp::Concat => {
+            type_check!(l_value, Value::String(mut l), "String");
+            type_check!(r_value, Value::String(r), "String");
+            l.push_str(&r);
+            Ok(Value::String(l))
+        }
+        BinOp::Take => {
+            type_check!(l_value, Value::String(s), "String");
+            type_check!(r_value, Value::Int(n), "Int");
+            let ret = s.chars().take(n as usize).collect(); // TODO: パフォーマンスの問題があるかも
+            Ok(Value::String(ret))
+        }
+        BinOp::Drop => {
+            type_check!(l_value, Value::String(s), "String");
+            type_check!(r_value, Value::Int(n), "Int");
+            let ret = s.chars().skip(n as usize).collect(); // TODO: パフォーマンスの問題があるかも
+            Ok(Value::String(ret))
+        }
+        BinOp::Apply => unreachable!(),
+    }
+}
+
+fn eval_if(frame: Rc<Frame>, cond: &Node, then: &Node, else_: &Node) -> EvalResult<Value> {
+    let cond_value = eval(Rc::clone(&frame), cond)?;
+    type_check!(cond_value, Value::Bool(b), "Bool");
+    if b {
+        eval(frame, then)
+    } else {
+        eval(frame, else_)
+    }
+}
+
+fn eval_lambda(frame: Rc<Frame>, var: usize, body: Rc<Node>) -> EvalResult<Value> {
+    Ok(Value::Closure(frame, var, body))
+}
+
+fn eval_variable(frame: Rc<Frame>, var: usize) -> EvalResult<Value> {
+    match frame.lookup(var) {
+        Some(value) => Ok((*value).clone()), // TODO: この clone はパフォーマンス的にまずいかも
+        None => Err(EvalError::UndefinedVariable(var)),
+    }
+}
+
+pub fn eval(frame: Rc<Frame>, node: &Node) -> EvalResult<Value> {
+    match node {
+        Node::Literal(value) => Ok(value.clone()),
+        Node::UnaryOp(op, operand) => eval_unary_op(frame, *op, operand),
+        Node::BinOp(op, lhs, rhs) => eval_bin_op(frame, *op, lhs, rhs),
+        Node::If(cond, then, else_) => eval_if(frame, cond, then, else_),
+        Node::Lambda(var, body) => eval_lambda(frame, *var, Rc::clone(body)),
+        Node::Variable(var) => eval_variable(frame, *var),
+    }
 }

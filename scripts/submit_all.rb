@@ -21,7 +21,7 @@ def submit_one(problem, testid, ai="Simple")
     puts "problem=#{problem} testid=#{testid} ai=#{ai} Submitting..."
 
     # 実行ファイルを実行する
-    output, error = run_script("cargo run -q --manifest-path ../solver/Cargo.toml --bin #{problem} -- --ai #{ai} --input ../courses/#{problem}/#{testid}")
+    output, error = run_script("timeout 10 cargo run -q --manifest-path ../solver/Cargo.toml --bin #{problem} -- --ai #{ai} --input ../courses/#{problem}/#{testid}")
     
     # エラーが発生した場合はエラーを表示して終了する
     if !error.empty?
@@ -64,6 +64,9 @@ end
 Dir.glob('../courses/*').each do |problem|
     # ディレクトリの名前を取得
     problem = problem.split('/')[-1]
+
+    # lambdamanはいったんスキップ
+    next if problem == "lambdaman"
 
     # ディレクトリ内のファイルを全て取得
     Dir.glob("../courses/#{problem}/*").each do |testid|

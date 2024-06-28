@@ -3,6 +3,8 @@ pub mod input;
 pub mod lambdaman_input;
 pub mod lambdaman_solution;
 pub mod solution;
+pub mod spaceship_input;
+pub mod spaceship_solution;
 
 // NOTE: 動作確認用
 pub fn add(a: u64, b: u64) -> u64 {

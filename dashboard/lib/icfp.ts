@@ -6,7 +6,11 @@ for (let i = 0; i < TABLE.length; i++) {
   RTABLE[TABLE[i]] = i;
 }
 
-export function decodeString(s: string): string {
+export function decodeString(s: string): string | null {
+  if (s[0] !== "S") {
+    return null;
+  }
+
   let result = "";
   for (let i = 1; i < s.length; i++) {
     result += TABLE[s.charCodeAt(i) - 33];

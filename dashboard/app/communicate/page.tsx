@@ -32,7 +32,11 @@ export default function Page() {
       <h1>Communicate</h1>
       <form onSubmit={handleSubmit}>
         <label htmlFor="message"></label>
-        <input id="message" name="message" defaultValue="get index" />
+        <textarea
+          id="message"
+          name="message"
+          defaultValue="get index"
+        ></textarea>
         <button>send</button>
       </form>
       <div>

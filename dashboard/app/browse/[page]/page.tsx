@@ -14,7 +14,7 @@ export default async function Page({ params }: { params: { page: string } }) {
   }
 
   const source = res.value.evaluated.replace(
-    /\[([^\]]+)\]/g,
+    /\[([^\]]+)\](?!\()/g,
     "[$1](/browse/$1)"
   );
   return <Markdown remarkPlugins={[remarkGfm]}>{source}</Markdown>;

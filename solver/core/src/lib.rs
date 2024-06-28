@@ -1,5 +1,7 @@
-pub mod input;
 pub mod eval;
+pub mod input;
+pub mod lambdaman_input;
+pub mod lambdaman_solution;
 pub mod solution;
 
 // NOTE: 動作確認用

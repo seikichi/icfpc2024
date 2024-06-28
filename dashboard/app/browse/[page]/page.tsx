@@ -12,11 +12,10 @@ export default async function Page({ params }: { params: { page: string } }) {
   if (!res.value.evaluated) {
     return <code>{res.value.raw}</code>;
   }
-  // return <code style={{ whiteSpace: "pre-wrap" }}>{res.value.evaluated}</code>;
+
   const source = res.value.evaluated.replace(
     /\[([^\]]+)\]/g,
-    "[$1](/communicate/$1)"
+    "[$1](/browse/$1)"
   );
-  console.log(source);
   return <Markdown remarkPlugins={[remarkGfm]}>{source}</Markdown>;
 }

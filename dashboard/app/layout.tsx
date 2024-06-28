@@ -20,7 +20,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className}`}>{children}</body>
+      <body className={`${inter.className}`}>
+        <nav>
+          <ul>
+            <li>
+              <a href="/">Top</a>
+            </li>
+            <li>
+              <a href="/communicate">Communicate</a>
+            </li>
+            <li>
+              <a href="/browse/index">Browse Galaxy</a>
+            </li>
+          </ul>
+        </nav>
+        <main>{children}</main>
+      </body>
     </html>
   );
 }

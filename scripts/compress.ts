@@ -1,4 +1,20 @@
 (() => {
+  // 以下 ChatGPT に書かせたものを修正した decompress
+  //   const decompress = y(
+  //     (r) => (i) =>
+  //       i === ""
+  //         ? ""
+  //         : y((s) => (c) => (k) => k === 0 ? "" : c + s(c)(k - 1))(take(1, i))(
+  //             parseInt(take(1, drop(1, i)))
+  //           ) + r(drop(2, i))
+  //   );
+  //
+  // これを ICFP Language に変換すると
+  // B$ B$ Lg B$ Lf B$ vf vf Lh B$ vg Lx B$ B$ vh vh vx Lr Li ? B= vi S S B. B$ B$ B$ Lg B$ Lf B$ vf vf Lh B$ vg Lx B$ B$ vh vh vx Ls Lc Lk ? B= vk I! S B. vc B$ B$ vs vc B- vk I" BT I" vi U# BT I" BD I" vi B$ vr BD I# vi
+
+  // ランレングス符合化を行う
+  // 注意: 繰り返しが 93 回を上限としている。A を 94 文字なら A93A1
+  // (1-93 は 1 文字 (?) に変換できるので都合が良い)
   function compress(str: string) {
     const TABLE =
       "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`|~ \n";

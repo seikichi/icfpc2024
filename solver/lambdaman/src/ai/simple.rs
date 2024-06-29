@@ -56,7 +56,7 @@ impl HeadAI for SimpleHeadAI {
                 }
             }
         }
-        LambdamanSolution { moves }
+        LambdamanSolution { moves, order }
     }
 }
 

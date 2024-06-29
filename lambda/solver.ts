@@ -67,18 +67,19 @@ export async function solve(params: Params) {
   const solverPath = path.join(solverDir, course);
   const command = `${solverPath} -Q --input ${targetPath} ${args}`;
 
-  // NOTE: handle exception
-  const { id: runId } = await prisma.run.create({
-    data: {
-      args,
-      commitId,
-      course,
-      level,
-      experimentId,
-    },
-  });
-
+  let runId: number | null = null;
   try {
+    const run = await prisma.run.create({
+      data: {
+        args,
+        commitId,
+        course,
+        level,
+        experimentId,
+      },
+    });
+    runId = run.id;
+
     const { stdout, stderr } = await exec(command);
     console.log({ stdout, stderr });
 
@@ -93,9 +94,9 @@ export async function solve(params: Params) {
       })
     );
 
-    await prisma.successfulRun.create({
+    await prisma.run.update({
+      where: { id: runId },
       data: {
-        runId,
         score: output.score,
         elapsedSec,
       },
@@ -104,12 +105,26 @@ export async function solve(params: Params) {
     console.error(e);
 
     const elapsedSec = Math.ceil((performance.now() - start) / 1000);
-    await prisma.failedRun.create({
-      data: {
-        runId: 42,
-        error: e instanceof Error ? e.message : JSON.stringify(e),
-        elapsedSec,
-      },
-    });
+    if (runId !== null) {
+      await prisma.run.update({
+        where: { id: runId },
+        data: {
+          error: e instanceof Error ? e.message : JSON.stringify(e),
+          elapsedSec,
+        },
+      });
+    } else {
+      await prisma.run.create({
+        data: {
+          args,
+          commitId,
+          course,
+          level,
+          experimentId,
+          error: e instanceof Error ? e.message : JSON.stringify(e),
+          elapsedSec,
+        },
+      });
+    }
   }
 }

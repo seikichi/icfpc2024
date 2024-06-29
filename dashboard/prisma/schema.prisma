@@ -36,34 +36,9 @@ model Run {
     level  Int
     args   String @db.VarChar(256)
 
-    success    SuccessfulRun?
-    failed     FailedRun?
-    experiment Experiment?    @relation(fields: [experimentId], references: [id])
-}
+    elapsedSec Int?
+    score      BigInt?
+    error      String? @db.Text
 
-model SuccessfulRun {
-    id    Int @id @default(autoincrement())
-    runId Int @unique
-
-    createdAt DateTime @default(now())
-
-    elapsedSec Int
-    score      BigInt
-
-    // /runs/{runId}/solution 固定
-    // solutionKey String @db.VarChar(48)
-
-    run Run @relation(fields: [runId], references: [id])
-}
-
-model FailedRun {
-    id    Int @id @default(autoincrement())
-    runId Int @unique
-
-    createdAt DateTime @default(now())
-
-    elapsedSec Int
-    error      String @db.Text
-
-    run Run @relation(fields: [runId], references: [id])
+    experiment Experiment? @relation(fields: [experimentId], references: [id])
 }

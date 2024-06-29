@@ -7,6 +7,7 @@ ENV PATH $PATH:/root/.cargo/bin
 RUN rustup install stable
 
 WORKDIR ${LAMBDA_TASK_ROOT}
+COPY courses/ ./course
 COPY dashboard/prisma/schema.prisma ./prisma/schema.prisma
 COPY lambda/package.json lambda/package-lock.json lambda/*.ts lambda/tsconfig.json ./
 # RUN npm install && npm run prisma:generate && npm run build

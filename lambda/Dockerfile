@@ -40,6 +40,7 @@ RUN npm install && npm run prisma:generate && npm run build
 # RUN touch ./wasm/src/lib.rs ./base/src/lib.rs ./lambdaman/src/main.rs ./spaceship/src/main.rs
 
 COPY solver/Cargo.lock solver/Cargo.toml ./
+COPY solver/eval/ eval/
 COPY solver/base/ base/
 COPY solver/wasm/ wasm/
 COPY solver/lambdaman/ lambdaman/

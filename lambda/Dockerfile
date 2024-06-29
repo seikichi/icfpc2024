@@ -25,7 +25,6 @@ RUN mkdir -p ./cli/src && echo "fn main() { println!(\"dummy\"); }" > ./cli/src/
 
 # solvers
 RUN mkdir -p ./lambdaman/src && echo "fn main() { println!(\"dummy\"); }" > ./lambdaman/src/main.rs
-RUN cargo build --release
 RUN mkdir -p ./spaceship/src && echo "fn main() { println!(\"dummy\"); }" > ./spaceship/src/main.rs
 RUN cargo build --release
 

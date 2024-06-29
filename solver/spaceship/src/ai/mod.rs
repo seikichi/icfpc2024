@@ -1,5 +1,8 @@
+mod annealing;
+mod common;
 mod simple;
 
+pub use annealing::*;
 pub use simple::*;
 
 use crate::spaceship_input;

@@ -1,3 +1,5 @@
+use std::{collections::VecDeque, vec};
+
 // tpに着いた時の速度の絶対値を1以下にする前提で最適な移動を計算する
 pub fn calc_move(f: i64, t: i64, v: i64) -> i64 {
     let d = t - f;
@@ -36,4 +38,41 @@ pub fn make_move(f: &Vec<i64>, t: &Vec<i64>, v: &Vec<i64>) -> (Vec<i64>, Vec<cha
         moves.push(c);
     }
     return (v, moves);
+}
+
+// 速度の絶対値の制約が無い状態で最適な移動を計算する
+pub fn make_move2(f: &Vec<i64>, t: &Vec<i64>, v: &Vec<i64>) -> (Vec<i64>, Vec<char>) {
+    let max_dist = 20;
+    if (t[0] - f[0]).abs() > max_dist || (t[1] - f[1]).abs() > max_dist {
+        // println!("failed");
+        return make_move(f, t, v);
+    }
+    let mut que = VecDeque::new();
+    que.push_back((f.clone(), v.clone(), vec![]));
+    let mut iter = 0;
+    while let Some((cp, cv, cm)) = que.pop_front() {
+        if cp == *t {
+            // println!("{:?} {:?} {:?}", cp, cv, cm);
+            return (cv, cm);
+        }
+        iter += 1;
+        if iter == 100 {
+            break;
+        }
+        for dx in -1..=1 {
+            for dy in -1..=1 {
+                let nv = vec![cv[0] + dx, cv[1] + dy];
+                let np = vec![cp[0] + nv[0], cp[1] + nv[1]];
+                let c = (((dy + 1) * 3 + dx + 1) as u8 + '1' as u8) as char;
+                let mut ncm = cm.clone();
+                if (t[0] - np[0]).abs() > max_dist || (t[1] - np[1]).abs() > max_dist {
+                    continue;
+                }
+                ncm.push(c);
+                que.push_back((np, nv, ncm));
+            }
+        }
+    }
+    // println!("failed");
+    return make_move(f, t, v);
 }

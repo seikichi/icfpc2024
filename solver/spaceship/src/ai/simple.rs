@@ -36,7 +36,7 @@ impl HeadAI for SimpleHeadAI {
             order[iter] = target;
             visited[target] = true;
             let tp = &input.poss[target];
-            let (nv, mut nmoves) = common::make_move(&p, &tp, &v);
+            let (nv, mut nmoves) = common::make_move2(&p, &tp, &v);
             p = tp.clone();
             v = nv;
             moves.append(&mut nmoves);

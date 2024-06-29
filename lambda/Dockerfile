@@ -29,8 +29,6 @@ RUN cargo build --release
 RUN mkdir -p ./spaceship/src && echo "fn main() { println!(\"dummy\"); }" > ./spaceship/src/main.rs
 RUN cargo build --release
 
-RUN cargo build --release
-
 # copy whole source
 COPY solver/wasm ./wasm
 COPY solver/core ./core

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { SubmitButton } from "@/components/submit";
 import { z } from "zod";
 import { experiment } from "./actions";
@@ -8,6 +8,8 @@ import { Result, err } from "@/lib/result";
 
 export default function Page() {
   const [result, setResult] = useState<Result<{}, string> | null>(null);
+
+  const formRef = useRef<HTMLFormElement>(null);
 
   const formAction = useCallback(async (formData: FormData) => {
     try {
@@ -20,6 +22,8 @@ export default function Page() {
     } catch (e) {
       console.error(e);
       setResult(err(e instanceof Error ? e.message : JSON.stringify(e)));
+    } finally {
+      formRef.current?.reset();
     }
   }, []);
 
@@ -29,7 +33,7 @@ export default function Page() {
       <section>
         <h2>Submit</h2>
 
-        <form action={formAction}>
+        <form ref={formRef} action={formAction}>
           <div>
             <label htmlFor="course">Course:</label>
             <input id="course" name="course" type="text" />
@@ -54,6 +58,9 @@ export default function Page() {
             <SubmitButton>submit</SubmitButton>
           </div>
         </form>
+
+        {result && result.ok && <>submission successful.</>}
+        {result && !result.ok && <>submission failed: {result.error}</>}
       </section>
     </>
   );

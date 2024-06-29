@@ -4,14 +4,6 @@ export default async function ExperimentResults() {
   const experiments = await prisma.experiment.findMany({
     take: 10,
     orderBy: { createdAt: "desc" },
-    include: {
-      runs: {
-        include: {
-          success: true,
-          failed: true,
-        },
-      },
-    },
   });
 
   return (
@@ -26,8 +18,6 @@ export default async function ExperimentResults() {
             <th>Levels</th>
             <th>Tag</th>
             <th>Args</th>
-            <th>Succeeds</th>
-            <th>Fails</th>
           </tr>
         </thead>
         <tbody>
@@ -40,8 +30,6 @@ export default async function ExperimentResults() {
               <td>{e.levels}</td>
               <td>{e.tag}</td>
               <td>{e.args}</td>
-              <td>{e.runs.filter((r) => !!r.success).length}</td>
-              <td>{e.runs.filter((r) => !!r.failed).length}</td>
             </tr>
           ))}
         </tbody>

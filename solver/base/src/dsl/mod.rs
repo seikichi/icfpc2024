@@ -53,13 +53,17 @@ mod tests {
         doit("eq", "0 == true", "B= I! T");
         doit("or", "true || false", "B| T F");
         doit("and", "true && false", "B& T F");
-        doit("concat", "\"te\" . \"st\"", "B. S4% S34");
-        doit("take", "3 T \"test\"", "BT I$ S4%34");
-        doit("drop", "3 D \"test\"", "BD I$ S4%34");
+        doit("concat", r#""te" . "st""#, "B. S4% S34");
+        doit("take", r#"3 T "test""#, "BT I$ S4%34");
+        doit("drop", r#"3 D "test""#, "BD I$ S4%34");
         // apply
         doit("apply", r"\f -> \x -> f x", "L! L\" B$ v! v\"");
         // if
-        doit("if", "if 2 > 3 then \"yes\" else \"no\"", "? B> I# I$ S9%3 S./");
+        doit(
+            "if",
+            r#"if 2 > 3 then "yes" else "no""#,
+            "? B> I# I$ S9%3 S./",
+        );
         // lambda
         doit(
             "lambda",

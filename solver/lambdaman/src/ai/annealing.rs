@@ -116,7 +116,7 @@ impl AnnealingChainedAI {
             let current_index = old_solution.order[i];
             let same_position = pos == old_solution_pos;
             old_solution_pos = lambdaman_move(old_solution_pos, &old_solution.moves[i]);
-            if eat_timing != i && eaten[current_index] {
+            if eat_timing != i && (eaten[current_index] || current_index == target) {
                 continue;
             }
             if eat_timing != i && same_position {
@@ -208,11 +208,11 @@ impl ChainedAI for AnnealingChainedAI {
 
         let mut solution = initial_solution.clone();
         let mut rng = SmallRng::from_entropy();
-        let mut current_score = solution.score();
+        let mut current_score = solution.score() * -1;
         let start_at = Instant::now();
 
         let mut best_solution = solution.clone();
-        let mut best_score = current_score * -1;
+        let mut best_score = current_score;
 
         let mut temperature = self.initial_temperature;
 

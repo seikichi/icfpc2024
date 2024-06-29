@@ -7,7 +7,7 @@ ENV PATH $PATH:/root/.cargo/bin
 RUN rustup install stable
 
 WORKDIR ${LAMBDA_TASK_ROOT}
-COPY courses/ ./course
+COPY courses/ ./courses
 COPY dashboard/prisma/schema.prisma ./prisma/schema.prisma
 COPY lambda/package.json lambda/package-lock.json lambda/*.ts lambda/tsconfig.json ./
 # RUN npm install && npm run prisma:generate && npm run build
@@ -39,7 +39,12 @@ RUN npm install && npm run prisma:generate && npm run build
 # # solvers
 # RUN touch ./wasm/src/lib.rs ./base/src/lib.rs ./lambdaman/src/main.rs ./spaceship/src/main.rs
 
-COPY solver/* ./
+COPY solver/Cargo.lock solver/Cargo.toml ./
+COPY solver/base/ base/
+COPY solver/wasm/ wasm/
+COPY solver/lambdaman/ lambdaman/
+COPY solver/spaceship/ spaceship/
+
 RUN cargo build --release
 
 # CMD ["lambda.handler"]

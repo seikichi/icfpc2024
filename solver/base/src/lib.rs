@@ -1,4 +1,5 @@
 pub mod eval;
+pub mod dsl;
 pub mod lambdaman_input;
 pub mod lambdaman_solution;
 pub mod spaceship_input;

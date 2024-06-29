@@ -24,7 +24,9 @@ COPY solver/cli/Cargo.toml ./cli/
 RUN mkdir -p ./cli/src && echo "fn main() { println!(\"dummy\"); }" > ./cli/src/main.rs
 
 # solvers
+COPY solver/lambdaman/Cargo.toml ./wasm/
 RUN mkdir -p ./lambdaman/src && echo "fn main() { println!(\"dummy\"); }" > ./lambdaman/src/main.rs
+COPY solver/spaceship/Cargo.toml ./wasm/
 RUN mkdir -p ./spaceship/src && echo "fn main() { println!(\"dummy\"); }" > ./spaceship/src/main.rs
 RUN cargo build --release
 

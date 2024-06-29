@@ -148,7 +148,9 @@ fn parse_factor(tokens: &[Token]) -> Result<(Box<Expr>, &[Token])> {
         Token::String(s) => ok(Expr::String(s.clone()), tokens),
         Token::Identifier(ident) => ok(Expr::Variable(ident.clone()), tokens),
         Token::LParen => parse_paren(tokens),
-        Token::Minus => {
+        // 単項マイナスを導入すると文法が曖昧になってしまうので、
+        // OCaml を真似てマイナスの変わりにチルダを使う
+        Token::Tilde => {
             let (operand, tokens) = parse_factor(tokens)?;
             ok(Expr::UnaryOp(UnaryOp::Neg, operand), tokens)
         }

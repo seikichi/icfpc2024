@@ -140,6 +140,7 @@ fn lex_one(input: &str) -> LexResult {
         }
         '#' => return ok(Token::Sharp, 1),
         '$' => return ok(Token::Dollar, 1),
+        '~' => return ok(Token::Tilde, 1),
         _ => {}
     }
 
@@ -161,7 +162,7 @@ fn lex_one(input: &str) -> LexResult {
         return ok(token, m.end());
     }
 
-    let re_integer = static_regex!(r"^-?[0-9]+");
+    let re_integer = static_regex!(r"^[0-9]+");
     if let Some(m) = re_integer.find(input) {
         let n = BigInt::from_str(m.as_str()).unwrap();
         return ok(Token::Int(n), m.end());

@@ -47,6 +47,7 @@ pub enum Token {
     OrOr,
     Sharp,
     Dollar,
+    Tilde,
     T,
     D,
 }

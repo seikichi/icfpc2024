@@ -6,7 +6,7 @@ pub struct LambdamanSolution {
 
 impl LambdamanSolution {
     pub fn score(&self) -> i64 {
-        return self.moves.len() as i64;
+        return self.answer().len() as i64;
     }
     pub fn answer(&self) -> String {
         return String::from_iter(self.moves.clone().concat().iter());

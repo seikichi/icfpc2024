@@ -54,6 +54,9 @@ pub fn shortest_path(
     end: (usize, usize),
     input: &LambdamanInput,
 ) -> Vec<char> {
+    if start == end {
+        return vec![];
+    }
     // TODO: 遅い場合はqueにmoveを入れず後から復元するようにする
     let mut visited = vec![vec![false; input.w]; input.h];
     let mut que: VecDeque<(usize, usize, Vec<char>)> = VecDeque::new();
@@ -110,45 +113,51 @@ impl AnnealingChainedAI {
         let mut moves = vec![];
         let mut order = vec![];
         for i in 0..food_n {
-            let current_target = old_solution.order[i];
+            let current_index = old_solution.order[i];
             let same_position = pos == old_solution_pos;
             old_solution_pos = lambdaman_move(old_solution_pos, &old_solution.moves[i]);
-            if eaten[current_target] {
+            if eat_timing != i && eaten[current_index] {
                 continue;
             }
             if eat_timing != i && same_position {
                 pos = old_solution_pos;
                 moves.push(old_solution.moves[i].clone());
-                order.push(current_target);
+                order.push(current_index);
+                eaten[current_index] = true;
                 continue;
             }
             let mut next = vec![];
             if eat_timing == i {
                 next.push(target);
             }
-            next.push(current_target);
+            if !eaten[current_index] {
+                next.push(current_index);
+            }
             for &index in next.iter() {
+                if eaten[index] {
+                    continue;
+                }
                 let end = data.food_positions[index];
                 let current_move = shortest_path(pos, end, input);
                 let mut buffer = vec![];
                 for &c in current_move.iter() {
                     pos = lambdaman_one_move(pos, c);
                     buffer.push(c);
-                    if let Some(&index) = data.food_indexs.get(&pos) {
-                        if !eaten[index] {
+                    if let Some(&pos_index) = data.food_indexs.get(&pos) {
+                        if !eaten[pos_index] {
                             moves.push(buffer.clone());
-                            order.push(index);
-                            eaten[index] = true;
+                            order.push(pos_index);
+                            eaten[pos_index] = true;
                             buffer.clear();
-                            break;
                         }
                     }
                 }
-                // println!("{} {} {}", pos, data_food_positions[index], eaten[index]);
                 assert!(buffer.len() == 0);
                 assert!(eaten[index]);
             }
         }
+        assert!(moves.len() == food_n);
+        assert!(order.len() == food_n);
         LambdamanSolution { moves, order }
     }
 }
@@ -203,7 +212,7 @@ impl ChainedAI for AnnealingChainedAI {
         let start_at = Instant::now();
 
         let mut best_solution = solution.clone();
-        let mut best_score = current_score;
+        let mut best_score = current_score * -1;
 
         let mut temperature = self.initial_temperature;
 
@@ -260,7 +269,7 @@ impl ChainedAI for AnnealingChainedAI {
             solution = self.neighbor_move(&input, &solution, &mut rng, &data);
 
             //
-            let new_score = solution.score();
+            let new_score = solution.score() * -1;
             let is_valid_solution = true;
             if is_valid_solution {
                 valid_solution_count += 1;
@@ -270,7 +279,7 @@ impl ChainedAI for AnnealingChainedAI {
 
             if iter % 100 == 0 {
                 if is_valid_solution {
-                    info!("new_score = {}", new_score);
+                    info!("new_score = {}", new_score * -1);
                 } else {
                     info!("new_score = n/a");
                 }

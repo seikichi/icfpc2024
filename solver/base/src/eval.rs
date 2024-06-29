@@ -6,7 +6,7 @@ use std::{
 
 use num_bigint::BigInt;
 use num_traits::ToPrimitive;
-use once_cell::sync::Lazy;
+use once_cell::sync::{Lazy, OnceCell};
 use regex::Regex;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -301,15 +301,19 @@ type EvalResult<T> = Result<T, EvalError>;
 pub struct Thunk {
     frame: Rc<Frame>,
     node: Rc<Node>,
+    memo: OnceCell<Value>,
 }
 
 impl Thunk {
     pub fn new(frame: Rc<Frame>, node: Rc<Node>) -> Self {
-        Self { frame, node }
+        Self { frame, node, memo: OnceCell::new() }
     }
 
     pub fn force(&self) -> EvalResult<Value> {
-        eval(Rc::clone(&self.frame), &self.node)
+        let value = self.memo.get_or_try_init(|| {
+            eval(Rc::clone(&self.frame), &self.node)
+        })?;
+        Ok(value.clone())
     }
 }
 

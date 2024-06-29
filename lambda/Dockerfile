@@ -22,9 +22,9 @@ COPY solver/base/Cargo.toml ./base/
 RUN mkdir -p ./base/src && echo "fn f() {}" > ./base/src/lib.rs
 
 # solvers
-COPY solver/lambdaman/Cargo.toml ./wasm/
+COPY solver/lambdaman/Cargo.toml ./lambdaman/
 RUN mkdir -p ./lambdaman/src && echo "fn main() { println!(\"dummy\"); }" > ./lambdaman/src/main.rs
-COPY solver/spaceship/Cargo.toml ./wasm/
+COPY solver/spaceship/Cargo.toml ./spaceship/
 RUN mkdir -p ./spaceship/src && echo "fn main() { println!(\"dummy\"); }" > ./spaceship/src/main.rs
 RUN cargo build --release
 

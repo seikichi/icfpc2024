@@ -557,7 +557,7 @@ mod tests {
     fn big_int() {
         let source = r#"IuX$k"!#+$//2w"#;
         let value = eval_str(source).unwrap();
-        assert_eq!(value, Value::Int(4025597445063108291862138842i128.into()));
+        assert_eq!(value, Value::Int(40255974450631082918621388i128.into()));
     }
 
     #[test]

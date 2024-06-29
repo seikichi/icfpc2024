@@ -58,6 +58,9 @@ export default function Page() {
             <SubmitButton>submit</SubmitButton>
           </div>
         </form>
+
+        {result && result.ok && <>submission successful.</>}
+        {result && !result.ok && <>submission failed: {result.error}</>}
       </section>
     </>
   );

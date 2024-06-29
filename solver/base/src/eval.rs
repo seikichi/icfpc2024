@@ -28,11 +28,16 @@ impl Display for Value {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, enum_assoc::Assoc)]
+#[func(pub fn symbol(&self) -> char)]
 pub enum UnaryOp {
+    #[assoc(symbol = '-')]
     Neg,
+    #[assoc(symbol = '!')]
     Not,
+    #[assoc(symbol = '#')]
     StringToInt,
+    #[assoc(symbol = '$')]
     IntToString,
 }
 
@@ -47,20 +52,34 @@ impl Display for UnaryOp {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, enum_assoc::Assoc)]
+#[func(pub fn symbol(&self) -> char)]
 pub enum BinOp {
+    #[assoc(symbol = '+')]
     Add,
+    #[assoc(symbol = '-')]
     Sub,
+    #[assoc(symbol = '*')]
     Mul,
+    #[assoc(symbol = '/')]
     Div,
+    #[assoc(symbol = '%')]
     Mod,
+    #[assoc(symbol = '<')]
     Lt,
+    #[assoc(symbol = '>')]
     Gt,
+    #[assoc(symbol = '=')]
     Eq,
+    #[assoc(symbol = '|')]
     Or,
+    #[assoc(symbol = '&')]
     And,
+    #[assoc(symbol = '.')]
     Concat,
+    #[assoc(symbol = 'T')]
     Take, // Take first x chars of string y
+    #[assoc(symbol = 'D')]
     Drop, // Drop first x chars of string y
 }
 
@@ -169,9 +188,9 @@ fn test_parse_integer() {
     assert_eq!(*node, Node::Literal(Value::Int(1337.into())));
 }
 
-static TABLE: &'static [u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`|~ \n";
+pub static TABLE: &'static [u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`|~ \n";
 
-static RTABLE: Lazy<HashMap<u8, usize>> = Lazy::new(|| {
+pub static RTABLE: Lazy<HashMap<u8, usize>> = Lazy::new(|| {
     let mut m = HashMap::new();
     for (i, c) in TABLE.iter().enumerate() {
         m.insert(*c, i);

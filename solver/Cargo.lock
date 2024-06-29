@@ -77,6 +77,7 @@ name = "base"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "enum-assoc",
  "env_logger",
  "im-rc",
  "log",
@@ -141,6 +142,25 @@ checksum = "a06aeb73f470f66dcdbf7223caeebb85984942f22f1adb2a088cf9668146bbbc"
 dependencies = [
  "cfg-if",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "dsl"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base",
+]
+
+[[package]]
+name = "enum-assoc"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24247b89d37b9502dc5a4b80d369aab1a12106067776e440094c786dae5b9d07"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]

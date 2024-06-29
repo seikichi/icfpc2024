@@ -18,10 +18,8 @@ RUN npm install && npm run prisma:generate && npm run build
 COPY solver/Cargo.lock solver/Cargo.toml ./
 COPY solver/wasm/Cargo.toml ./wasm/
 RUN mkdir -p ./wasm/src && echo "fn f() {}" > ./wasm/src/lib.rs
-COPY solver/core/Cargo.toml ./core/
-RUN mkdir -p ./core/src && echo "fn f() {}" > ./core/src/lib.rs
-COPY solver/cli/Cargo.toml ./cli/
-RUN mkdir -p ./cli/src && echo "fn main() { println!(\"dummy\"); }" > ./cli/src/main.rs
+COPY solver/base/Cargo.toml ./base/
+RUN mkdir -p ./base/src && echo "fn f() {}" > ./base/src/lib.rs
 
 # solvers
 COPY solver/lambdaman/Cargo.toml ./wasm/
@@ -32,15 +30,14 @@ RUN cargo build --release
 
 # copy whole source
 COPY solver/wasm ./wasm
-COPY solver/core ./core
-COPY solver/cli ./cli
+COPY solver/base ./bae
 
 # solvers
 COPY solver/lambdaman ./lambdaman
 COPY solver/spaceship ./spaceship
 
 # solvers
-RUN touch ./wasm/src/lib.rs ./core/src/lib.rs ./cli/src/main.rs ./lambdaman/src/main.rs ./spaceship/src/main.rs
+RUN touch ./wasm/src/lib.rs ./base/src/lib.rs ./lambdaman/src/main.rs ./spaceship/src/main.rs
 RUN cargo build --release
 
 # CMD ["lambda.handler"]

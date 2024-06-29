@@ -1,6 +1,8 @@
 import ExperimentResults from "./results";
 import SubmitForm from "./submit";
 
+export const dynamic = "force-dynamic";
+
 export default function Page() {
   return (
     <>

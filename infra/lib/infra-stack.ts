@@ -63,9 +63,9 @@ export class InfraStack extends cdk.Stack {
       memorySize: 256,
       environment: {
         COMMIT_ID: commitHash,
-        // BUCKET: bucket.bucketName,
-        // POSTGRES_PRISMA_URL: env.POSTGRES_PRISMA_URL,
-        // POSTGRES_URL_NON_POOLING: env.POSTGRES_URL_NON_POOLING,
+        BUCKET: bucket.bucketName,
+        POSTGRES_PRISMA_URL: env.POSTGRES_PRISMA_URL,
+        POSTGRES_URL_NON_POOLING: env.POSTGRES_URL_NON_POOLING,
       },
     });
 
@@ -95,8 +95,8 @@ export class InfraStack extends cdk.Stack {
         COMMIT_ID: commitHash,
         SOLVER_LAMBDA_ARN: solver.functionArn,
         // BUCKET: bucket.bucketName,
-        // POSTGRES_PRISMA_URL: env.POSTGRES_PRISMA_URL,
-        // POSTGRES_URL_NON_POOLING: env.POSTGRES_URL_NON_POOLING,
+        POSTGRES_PRISMA_URL: env.POSTGRES_PRISMA_URL,
+        POSTGRES_URL_NON_POOLING: env.POSTGRES_URL_NON_POOLING,
       },
     });
 

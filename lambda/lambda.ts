@@ -4,6 +4,9 @@ import * as path from "path";
 
 import { z } from "zod";
 
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
+
 import {
   LambdaClient,
   InvokeCommand,
@@ -12,12 +15,16 @@ import {
 
 const SolverEnv = z.object({
   COMMIT_ID: z.string().min(1),
+  BUCKET: z.string().min(1),
+  POSTGRES_PRISMA_URL: z.string(),
+  POSTGRES_URL_NON_POOLING: z.string(),
 });
 
 const SolverEvent = z.object({
   course: z.string(),
   level: z.number(),
   args: z.string(),
+  experimentId: z.number().nullable(),
 });
 
 export const solver: Handler = async (rawEvent, _context) => {
@@ -30,12 +37,16 @@ export const solver: Handler = async (rawEvent, _context) => {
     tmpDir: "/tmp",
     courseDir: "./courses",
     solverDir: path.join("target", "release"),
+    bucket: env.BUCKET,
+    experimentId: null,
   });
 };
 
 const ExperimentEnv = z.object({
   COMMIT_ID: z.string().min(1),
   SOLVER_LAMBDA_ARN: z.string().startsWith("arn:aws:lambda:"),
+  POSTGRES_PRISMA_URL: z.string(),
+  POSTGRES_URL_NON_POOLING: z.string(),
 });
 
 const ExperimentEvent = z.object({
@@ -48,8 +59,6 @@ const ExperimentEvent = z.object({
 export const experiment: Handler = async (rawEvent, _context) => {
   const env = ExperimentEnv.parse(process.env);
   const event = ExperimentEvent.parse(rawEvent);
-
-  // TODO: insert record
 
   // Parse levels (e.g., "1,2,3-5,7" => {1, 2, 3, 4, 5, 7})
   const ids: Set<number> = new Set([]);
@@ -67,6 +76,16 @@ export const experiment: Handler = async (rawEvent, _context) => {
 
   const lambda = new LambdaClient({ region: "ap-northeast-1" });
 
+  const { id: experimentId } = await prisma.experiment.create({
+    data: {
+      args: event.args,
+      course: event.course,
+      tag: event.tag,
+      levels: event.levels,
+      commitId: env.COMMIT_ID,
+    },
+  });
+
   for (const level of Array.from(ids)) {
     console.log(`invoke: ${event.course}${level}`);
 
@@ -74,6 +93,7 @@ export const experiment: Handler = async (rawEvent, _context) => {
       course: event.course,
       level,
       args: event.args,
+      experimentId,
     };
 
     await lambda.send(
@@ -84,4 +104,5 @@ export const experiment: Handler = async (rawEvent, _context) => {
       })
     );
   }
+  return { ok: true, value: {} };
 };

@@ -12,5 +12,7 @@ import * as path from "path";
     tmpDir: "./tmp",
     args: "--ai Simple,Simple",
     commitId: "DUMMY",
+    bucket: "DUMMY",
+    experimentId: null,
   });
 })();

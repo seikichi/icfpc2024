@@ -1,8 +1,6 @@
 pub mod eval;
-pub mod input;
 pub mod lambdaman_input;
 pub mod lambdaman_solution;
-pub mod solution;
 pub mod spaceship_input;
 pub mod spaceship_solution;
 

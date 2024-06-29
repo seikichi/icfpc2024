@@ -78,7 +78,8 @@ export const client = {
 };
 
 (async () => {
-  const courses = { lambdaman: 21, spaceship: 25 };
+  // const courses = { lambdaman: 21, spaceship: 25 };
+  const courses = { spaceship: 25 };
   for (const [course, levels] of Object.entries(courses)) {
     for (let i = 1; i <= levels; i++) {
       console.log(`submit: ${course}${i}`);

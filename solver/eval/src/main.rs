@@ -1,7 +1,8 @@
 use base::eval;
 use std::{
     io::{self, Read},
-    rc::Rc, thread::{self, Builder},
+    rc::Rc,
+    thread::{self, Builder},
 };
 
 pub fn eval_str(input: &str) -> anyhow::Result<eval::Value> {
@@ -29,5 +30,6 @@ fn main() -> anyhow::Result<()> {
     thread::scope(|s| {
         let handle = builder.spawn_scoped(s, do_main).unwrap();
         handle.join()
-    }).unwrap()
+    })
+    .unwrap()
 }

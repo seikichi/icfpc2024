@@ -35,6 +35,9 @@ export default function RootLayout({
             <li>
               <a href="/experiments">Experiments</a>
             </li>
+            <li>
+              <a href="/icfp">ICFP Language</a>
+            </li>
           </ul>
         </nav>
         <main>{children}</main>

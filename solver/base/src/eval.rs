@@ -306,13 +306,17 @@ pub struct Thunk {
 
 impl Thunk {
     pub fn new(frame: Rc<Frame>, node: Rc<Node>) -> Self {
-        Self { frame, node, memo: OnceCell::new() }
+        Self {
+            frame,
+            node,
+            memo: OnceCell::new(),
+        }
     }
 
     pub fn force(&self) -> EvalResult<Value> {
-        let value = self.memo.get_or_try_init(|| {
-            eval(Rc::clone(&self.frame), &self.node)
-        })?;
+        let value = self
+            .memo
+            .get_or_try_init(|| eval(Rc::clone(&self.frame), &self.node))?;
         Ok(value.clone())
     }
 }
@@ -431,6 +435,22 @@ fn eval_apply(frame: Rc<Frame>, func: &Node, arg: Rc<Node>) -> EvalResult<Value>
 }
 
 fn eval_bin_op(frame: Rc<Frame>, op: BinOp, lhs: &Node, rhs: &Node) -> EvalResult<Value> {
+    // x * 0 や 0 * x は x を評価せずにゼロを返す。
+    if op == BinOp::Mul {
+        match lhs {
+            Node::Literal(Value::Int(i)) if *i == BigInt::ZERO => {
+                return Ok(Value::Int(BigInt::ZERO));
+            }
+            _ => {}
+        }
+        match rhs {
+            Node::Literal(Value::Int(i)) if *i == BigInt::ZERO => {
+                return Ok(Value::Int(BigInt::ZERO));
+            }
+            _ => {}
+        }
+    }
+
     let l_value = eval(Rc::clone(&frame), lhs)?;
     let r_value = eval(frame, rhs)?;
     match op {

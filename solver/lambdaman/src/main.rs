@@ -170,7 +170,7 @@ pub fn run() -> anyhow::Result<()> {
     // let output = Output { score: *score };
     // println!("{}", serde_json::to_string(&output)?);
 
-    println!("{}", String::from_iter(solution.moves.iter()));
+    println!("{}", solution.answer());
 
     Ok(())
 }

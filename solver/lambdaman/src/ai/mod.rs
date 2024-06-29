@@ -1,5 +1,7 @@
+mod annealing;
 mod simple;
 
+pub use annealing::*;
 pub use simple::*;
 
 use crate::lambdaman_input;

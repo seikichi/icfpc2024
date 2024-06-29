@@ -167,8 +167,17 @@ fn test_parse_integer() {
     assert_eq!(*node, Node::Literal(Value::Int(1337)));
 }
 
+static TABLE: &'static [u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`|~ \n";
+
+static RTABLE: Lazy<HashMap<u8, usize>> = Lazy::new(|| {
+    let mut m = HashMap::new();
+    for (i, c) in TABLE.iter().enumerate() {
+        m.insert(*c, i);
+    }
+    m
+});
+
 fn parse_string(body: &str) -> ParseResult<Box<Node>> {
-    static TABLE: &'static [u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`|~ \n";
     let mut ret = String::new();
     for c in body.chars() {
         let i = c as usize;
@@ -315,16 +324,6 @@ macro_rules! type_check {
         };
     };
 }
-
-static TABLE: &'static [u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`|~ \n";
-
-static RTABLE: Lazy<HashMap<u8, usize>> = Lazy::new(|| {
-    let mut m = HashMap::new();
-    for (i, c) in TABLE.iter().enumerate() {
-        m.insert(*c, i);
-    }
-    m
-});
 
 fn string_to_int_94(s: &str) -> EvalResult<i64> {
     let mut ret = 0;
@@ -501,5 +500,29 @@ pub fn eval(frame: Rc<Frame>, node: &Node) -> EvalResult<Value> {
         Node::If(cond, then, else_) => eval_if(frame, cond, then, else_),
         Node::Lambda(var, body) => eval_lambda(frame, *var, Rc::clone(body)),
         Node::Variable(var) => eval_variable(frame, *var),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn eval_str(input: &str) -> anyhow::Result<Value> {
+        let tokens = tokenize(input);
+        let (ast, rest) = parse(&tokens)?;
+        if !rest.is_empty() {
+            anyhow::bail!("there are extra tokens")
+        }
+        let frame = Frame::new();
+        let value = eval(Rc::new(frame), &ast)?;
+        Ok(value)
+    }
+
+    #[test]
+    fn language_test() {
+        let source = r#"? B= B$ B$ B$ B$ L$ L$ L$ L# v$ I" I# I$ I% I$ ? B= B$ L$ v$ I+ I+ ? B= BD I$ S4%34 S4 ? B= BT I$ S4%34 S4%3 ? B= B. S4% S34 S4%34 ? U! B& T F ? B& T T ? U! B| F F ? B| F T ? B< U- I$ U- I# ? B> I$ I# ? B= U- I" B% U- I$ I# ? B= I" B% I( I$ ? B= U- I" B/ U- I$ I# ? B= I# B/ I( I$ ? B= I' B* I# I$ ? B= I$ B+ I" I# ? B= U$ I4%34 S4%34 ? B= U# S4%34 I4%34 ? U! F ? B= U- I$ B- I# I& ? B= I$ B- I& I# ? B= S4%34 S4%34 ? B= F F ? B= I$ I$ ? T B. B. SM%,&k#(%#+}IEj}3%.$}z3/,6%},!.'5!'%y4%34} U$ B+ I# B* I$> I1~s:U@ Sz}4/}#,!)-}0/).43}&/2})4 S)&})3}./4}#/22%#4 S").!29}q})3}./4}#/22%#4 S").!29}q})3}./4}#/22%#4 S").!29}q})3}./4}#/22%#4 S").!29}k})3}./4}#/22%#4 S5.!29}k})3}./4}#/22%#4 S5.!29}_})3}./4}#/22%#4 S5.!29}a})3}./4}#/22%#4 S5.!29}b})3}./4}#/22%#4 S").!29}i})3}./4}#/22%#4 S").!29}h})3}./4}#/22%#4 S").!29}m})3}./4}#/22%#4 S").!29}m})3}./4}#/22%#4 S").!29}c})3}./4}#/22%#4 S").!29}c})3}./4}#/22%#4 S").!29}r})3}./4}#/22%#4 S").!29}p})3}./4}#/22%#4 S").!29}{})3}./4}#/22%#4 S").!29}{})3}./4}#/22%#4 S").!29}d})3}./4}#/22%#4 S").!29}d})3}./4}#/22%#4 S").!29}l})3}./4}#/22%#4 S").!29}N})3}./4}#/22%#4 S").!29}>})3}./4}#/22%#4 S!00,)#!4)/.})3}./4}#/22%#4 S!00,)#!4)/.})3}./4}#/22%#4"#;
+        let value = eval_str(source).unwrap();
+        let expected = "Self-check OK, send `solve language_test 4w3s0m3` to claim points for it";
+        assert_eq!(value, Value::String(expected.into()));
     }
 }

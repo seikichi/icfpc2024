@@ -279,7 +279,11 @@ impl ChainedAI for AnnealingChainedAI {
 
             if iter % 100 == 0 {
                 if is_valid_solution {
-                    info!("new_score = {}", new_score * -1);
+                    info!(
+                        "new_score = {}, best_score = {}",
+                        new_score * -1,
+                        best_score * -1
+                    );
                 } else {
                     info!("new_score = n/a");
                 }

@@ -5,8 +5,8 @@ use base::*;
 use std::path::PathBuf;
 
 use anyhow::bail;
-// use log::info;
-// use std::{path::PathBuf, time::Duration};
+use log::info;
+use std::time::Duration;
 use structopt::StructOpt;
 
 fn main() -> anyhow::Result<()> {
@@ -35,24 +35,18 @@ struct Opt {
 
     #[structopt(short = "Q", help = "disable debug and info log")]
     super_quiet: bool,
-    // #[structopt(short = "p", default_value = "500.0", help = "prune threshold")]
-    // prune_threshold: f32,
 
-    // #[structopt(long = "annealing-seconds", default_value = "10")]
-    // annealing_seconds: u64,
+    #[structopt(long = "annealing-seconds", default_value = "10")]
+    annealing_seconds: u64,
 
-    // #[structopt(long = "annealing-initial-temperature", default_value = "1000.0")]
-    // annealing_initial_temperature: f64,
+    #[structopt(long = "annealing-initial-temperature", default_value = "1000.0")]
+    annealing_initial_temperature: f64,
 
-    // #[structopt(long = "annealing-swap-ratio", default_value = "30.0")]
-    // annealing_swap_ratio: f32,
+    #[structopt(long = "annealing-dead-end-ratio", default_value = "30.0")]
+    annealing_dead_end_ratio: f32,
 
-    // #[structopt(long = "annealing-move-ratio", default_value = "60.0")]
-    // annealing_move_ratio: f32,
-
-    // #[structopt(long = "annealing-multi-move-ratio", default_value = "10.0")]
-    // annealing_multi_move_ratio: f32,
-
+    #[structopt(long = "annealing-other-ratio", default_value = "3.0")]
+    annealing_other_ratio: f32,
     // #[structopt(long = "load-path", default_value = "")]
     // load_path: String,
 
@@ -78,7 +72,7 @@ struct Opt {
 
 fn parse_ai_string(
     ai_str: &str,
-    _opt: &Opt,
+    opt: &Opt,
 ) -> anyhow::Result<(Box<dyn HeadAI>, Vec<Box<dyn ChainedAI>>)> {
     let parts = ai_str.split(',').collect::<Vec<_>>();
     let head_ai: Box<dyn ai::HeadAI> = match parts[0] {
@@ -95,13 +89,12 @@ fn parse_ai_string(
     let mut chained_ais = vec![];
     for name in &parts[1..] {
         let chained_ai: Box<dyn ai::ChainedAI> = match *name {
-            // "Annealing" => Box::new(ai::AnnealingAI {
-            //     time_limit: Duration::from_secs(opt.annealing_seconds),
-            //     initial_temperature: opt.annealing_initial_temperature,
-            //     swap_ratio: opt.annealing_swap_ratio,
-            //     move_ratio: opt.annealing_move_ratio,
-            //     multi_move_ratio: opt.annealing_multi_move_ratio,
-            // }),
+            "Annealing" => Box::new(ai::AnnealingChainedAI {
+                time_limit: Duration::from_secs(opt.annealing_seconds),
+                initial_temperature: opt.annealing_initial_temperature,
+                dead_end_ratio: opt.annealing_dead_end_ratio,
+                other_ratio: opt.annealing_other_ratio,
+            }),
             // "GreedMove" => Box::new(ai::GreedMoveAI {
             //     initial_move_distance: opt.greed_move_initial_move_distance,
             //     iteration_num: opt.greed_move_iteration_num,
@@ -130,7 +123,7 @@ pub fn run() -> anyhow::Result<()> {
     };
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(loglevel)).init();
 
-    let (mut head_ai, _chained_ais) = parse_ai_string(&opt.ai, &opt)?;
+    let (mut head_ai, chained_ais) = parse_ai_string(&opt.ai, &opt)?;
 
     // if !opt.output_dir.is_dir() {
     //     bail!("'{}' is not a directory", opt.output_dir.to_string_lossy());
@@ -147,19 +140,19 @@ pub fn run() -> anyhow::Result<()> {
 
     let original_input = lambdaman_input::load_from_file(opt.input_path.clone())?;
 
-    let solution = head_ai.solve(&original_input);
-    // let mut score_history = vec![];
-    // score_history.push(score::calculate_with_volume(&original_input, &solution).unwrap());
+    let mut solution = head_ai.solve(&original_input);
+    let mut score_history = vec![];
+    score_history.push(solution.score());
 
-    // for mut chained_ai in chained_ais {
-    //     solution = chained_ai.solve(&pruned_input, &solution);
-    //     score_history.push(score::calculate_with_volume(&original_input, &solution).unwrap());
-    // }
+    for mut chained_ai in chained_ais {
+        solution = chained_ai.solve(&original_input, &solution);
+        score_history.push(solution.score());
+    }
 
-    // info!("Score History:");
-    // for (i, score) in score_history.iter().enumerate() {
-    //     info!("    {i}: {score}")
-    // }
+    info!("Score History:");
+    for (i, score) in score_history.iter().enumerate() {
+        info!("    {i}: {score}")
+    }
 
     // let volumes = score::make_volumes(&original_input, &solution);
     // let output_filename = opt.output_dir.join(problem_id.clone() + ".json");

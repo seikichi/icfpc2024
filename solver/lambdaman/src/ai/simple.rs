@@ -30,7 +30,7 @@ impl HeadAI for SimpleHeadAI {
                     eaten[y][x] = true;
                     sy = y;
                     sx = x;
-                    moves.append(&mut current_move.clone());
+                    moves.push(current_move.clone());
                     order.push(food_indexs[&(x, y)]);
                     // println!("{} {}", x, y);
                     break;

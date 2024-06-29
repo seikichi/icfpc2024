@@ -97,6 +97,12 @@ fn parse_expr(tokens: &[Token]) -> Result<(Box<Expr>, &[Token])> {
             Token::Dot => {
                 expr = Box::new(Expr::BinOp(BinOp::Concat, expr, expr_));
             }
+            Token::T => {
+                expr = Box::new(Expr::BinOp(BinOp::Take, expr, expr_));
+            }
+            Token::D => {
+                expr = Box::new(Expr::BinOp(BinOp::Drop, expr, expr_));
+            }
             _ => break,
         }
         tokens = tokens_;

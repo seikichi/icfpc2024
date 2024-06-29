@@ -4,13 +4,15 @@ use std::{
     rc::Rc,
 };
 
+use num_bigint::BigInt;
+use num_traits::ToPrimitive;
 use once_cell::sync::Lazy;
 use regex::Regex;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Value {
     Bool(bool),
-    Int(i64),
+    Int(BigInt),
     String(String),
     Closure(Rc<Frame>, usize, Rc<Node>),
 }
@@ -99,8 +101,8 @@ impl Display for Node {
             Node::Literal(v) => write!(f, "{v}"),
             Node::UnaryOp(op, node) => write!(f, "{op}{node}"),
             Node::BinOp(op, l, r) => write!(f, "({l} {op} {r})"),
-            Node::Apply(func, arg) => write!(f, "{func}${arg}"),
-            Node::If(cond, then, else_) => write!(f, "if {cond} then {then} else {else_}"),
+            Node::Apply(func, arg) => write!(f, "({func} $ {arg})"),
+            Node::If(cond, then, else_) => write!(f, "(if {cond} then {then} else {else_})"),
             Node::Lambda(var, body) => write!(f, "[λ v{var}. {body}]"),
             Node::Variable(var) => write!(f, "v{var}"),
         }
@@ -144,8 +146,8 @@ fn ok(node: Node, rest: &[Token]) -> ParseResult<(Box<Node>, &[Token])> {
     Ok((Box::new(node), rest))
 }
 
-fn parse_integer_raw(body: &str) -> ParseResult<i64> {
-    let mut ret: i64 = 0;
+fn parse_integer_raw(body: &str) -> ParseResult<BigInt> {
+    let mut ret: BigInt = BigInt::ZERO;
     for c in body.chars() {
         let i = c as i64;
         if i < 33 || i >= 33 + 94 {
@@ -164,7 +166,7 @@ fn parse_integer(body: &str) -> ParseResult<Box<Node>> {
 #[test]
 fn test_parse_integer() {
     let node = parse_integer("/6").unwrap();
-    assert_eq!(*node, Node::Literal(Value::Int(1337)));
+    assert_eq!(*node, Node::Literal(Value::Int(1337.into())));
 }
 
 static TABLE: &'static [u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`|~ \n";
@@ -269,12 +271,12 @@ pub fn parse(tokens: &[Token]) -> ParseResult<(Box<Node>, &[Token])> {
             ok(Node::If(cond, then, else_), rest3)
         }
         'L' => {
-            let var = parse_integer_raw(body)? as usize;
+            let var = parse_integer_raw(body)?.to_usize().unwrap();
             let (expr, rest) = parse(&tokens[1..])?;
             ok(Node::Lambda(var, Rc::new(*expr)), rest)
         }
         'v' => {
-            let var = parse_integer_raw(body)? as usize;
+            let var = parse_integer_raw(body)?.to_usize().unwrap();
             ok(Node::Variable(var), &tokens[1..])
         }
         _ => Err(ParseError::UnknownIndicator(indicator)),
@@ -354,29 +356,30 @@ macro_rules! type_check {
     };
 }
 
-fn string_to_int_94(s: &str) -> EvalResult<i64> {
-    let mut ret = 0;
+fn string_to_int_94(s: &str) -> EvalResult<BigInt> {
+    let mut ret: BigInt = BigInt::ZERO;
     for c in s.bytes() {
         let index = RTABLE
             .get(&c)
             .ok_or_else(|| EvalError::ValueError(format!("string-to-int: invalid number: {s}")))?;
-        ret = ret * 94 + index;
+        ret = ret * 94 + *index as i64;
     }
-    Ok(ret as i64)
+    Ok(ret as BigInt)
 }
 
-fn int_to_string_94(mut i: i64) -> String {
-    if i == 0 {
+fn int_to_string_94(mut i: BigInt) -> String {
+    if i == BigInt::ZERO {
         return "!".into();
     }
     let mut neg = false;
-    if i < 0 {
+    if i < BigInt::ZERO {
         neg = true;
         i = -i;
     }
     let mut ret = Vec::new();
-    while i > 0 {
-        ret.push(TABLE[(i % 94) as usize]);
+    while i > BigInt::ZERO {
+        let index = (i.clone() % 94usize).to_usize().unwrap();
+        ret.push(TABLE[index]);
         i /= 94;
     }
     if neg {
@@ -482,13 +485,13 @@ fn eval_bin_op(frame: Rc<Frame>, op: BinOp, lhs: &Node, rhs: &Node) -> EvalResul
         BinOp::Take => {
             type_check!(l_value, Value::Int(n), "Int", "take(lhs)");
             type_check!(r_value, Value::String(s), "String", "take(rhs)");
-            let ret = s.chars().take(n as usize).collect(); // TODO: パフォーマンスの問題があるかも
+            let ret = s.chars().take(n.to_usize().unwrap()).collect(); // TODO: パフォーマンスの問題があるかも
             Ok(Value::String(ret))
         }
         BinOp::Drop => {
             type_check!(l_value, Value::Int(n), "Int", "drop(lhs)");
             type_check!(r_value, Value::String(s), "String", "drop(rhs)");
-            let ret = s.chars().skip(n as usize).collect(); // TODO: パフォーマンスの問題があるかも
+            let ret = s.chars().skip(n.to_usize().unwrap()).collect(); // TODO: パフォーマンスの問題があるかも
             Ok(Value::String(ret))
         }
     }
@@ -551,10 +554,17 @@ mod tests {
     }
 
     #[test]
+    fn big_int() {
+        let source = r#"IuX$k"!#+$//2w"#;
+        let value = eval_str(source).unwrap();
+        assert_eq!(value, Value::Int(40255974450631082918621388i128.into()));
+    }
+
+    #[test]
     fn lazy() {
         let source = r#"B$ L# B$ L" B+ v" v" B* I$ I# v8"#;
         let value = eval_str(source).unwrap();
-        assert_eq!(value, Value::Int(12));
+        assert_eq!(value, Value::Int(12.into()));
     }
 
     #[test]
@@ -566,6 +576,6 @@ mod tests {
         // fst 3 loop: B$ B$ Lx Ly vx I$ B$ Lx B$ B$ vx vx I0 Lx B$ B$ vx vx I0
         let source = r#"B$ B$ Lx Ly vx I$ B$ Lx B$ B$ vx vx I0 Lx B$ B$ vx vx I0"#;
         let value = eval_str(source).unwrap();
-        assert_eq!(value, Value::Int(3));
+        assert_eq!(value, Value::Int(3.into()));
     }
 }

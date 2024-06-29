@@ -58,9 +58,8 @@ pub enum BinOp {
     Or,
     And,
     Concat,
-    Take,  // Take first x chars of string y
-    Drop,  // Drop first x chars of string y
-    Apply, // Apply term x to y
+    Take, // Take first x chars of string y
+    Drop, // Drop first x chars of string y
 }
 
 impl Display for BinOp {
@@ -79,7 +78,6 @@ impl Display for BinOp {
             BinOp::Concat => write!(f, ".."),
             BinOp::Take => write!(f, "`take`"),
             BinOp::Drop => write!(f, "`drop`"),
-            BinOp::Apply => write!(f, "$"),
         }
     }
 }
@@ -90,6 +88,7 @@ pub enum Node {
     Variable(usize),
     UnaryOp(UnaryOp, Box<Node>),
     BinOp(BinOp, Box<Node>, Box<Node>),
+    Apply(Box<Node>, Rc<Node>),
     If(Box<Node>, Box<Node>, Box<Node>),
     Lambda(usize, Rc<Node>),
 }
@@ -100,6 +99,7 @@ impl Display for Node {
             Node::Literal(v) => write!(f, "{v}"),
             Node::UnaryOp(op, node) => write!(f, "{op}{node}"),
             Node::BinOp(op, l, r) => write!(f, "({l} {op} {r})"),
+            Node::Apply(func, arg) => write!(f, "{func}${arg}"),
             Node::If(cond, then, else_) => write!(f, "if {cond} then {then} else {else_}"),
             Node::Lambda(var, body) => write!(f, "[λ v{var}. {body}]"),
             Node::Variable(var) => write!(f, "v{var}"),
@@ -229,7 +229,6 @@ fn parse_bin_op(body: &str) -> ParseResult<BinOp> {
         '.' => Ok(BinOp::Concat),
         'T' => Ok(BinOp::Take),
         'D' => Ok(BinOp::Drop),
-        '$' => Ok(BinOp::Apply),
         _ => Err(ParseError::InvalidBinaryOp(body.into())),
     }
 }
@@ -252,10 +251,16 @@ pub fn parse(tokens: &[Token]) -> ParseResult<(Box<Node>, &[Token])> {
             ok(Node::UnaryOp(op, operand), rest)
         }
         'B' => {
-            let op = parse_bin_op(body)?;
-            let (lhs, rest1) = parse(&tokens[1..])?;
-            let (rhs, rest2) = parse(rest1)?;
-            ok(Node::BinOp(op, lhs, rhs), rest2)
+            if body == "$" {
+                let (lhs, rest1) = parse(&tokens[1..])?;
+                let (rhs, rest2) = parse(rest1)?;
+                ok(Node::Apply(lhs, Rc::new(*rhs)), rest2)
+            } else {
+                let op = parse_bin_op(body)?;
+                let (lhs, rest1) = parse(&tokens[1..])?;
+                let (rhs, rest2) = parse(rest1)?;
+                ok(Node::BinOp(op, lhs, rhs), rest2)
+            }
         }
         '?' => {
             let (cond, rest1) = parse(&tokens[1..])?;
@@ -276,7 +281,7 @@ pub fn parse(tokens: &[Token]) -> ParseResult<(Box<Node>, &[Token])> {
     }
 }
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, PartialEq, Eq, thiserror::Error)]
 pub enum EvalError {
     #[error("{0}: type error: expected a value of type {1}, but the given value is {2}")]
     TypeError(String, String, String),
@@ -290,9 +295,33 @@ pub enum EvalError {
 
 type EvalResult<T> = Result<T, EvalError>;
 
+#[derive(Debug)]
+pub struct Thunk {
+    frame: Rc<Frame>,
+    node: Rc<Node>,
+}
+
+impl Thunk {
+    pub fn new(frame: Rc<Frame>, node: Rc<Node>) -> Self {
+        Self { frame, node }
+    }
+
+    pub fn force(&self) -> EvalResult<Value> {
+        eval(Rc::clone(&self.frame), &self.node)
+    }
+}
+
+impl PartialEq for Thunk {
+    fn eq(&self, other: &Self) -> bool {
+        self.force() == other.force()
+    }
+}
+
+impl Eq for Thunk {}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Frame {
-    variables: im_rc::HashMap<usize, Rc<Value>>,
+    variables: im_rc::HashMap<usize, Rc<Thunk>>,
 }
 
 impl Frame {
@@ -302,11 +331,11 @@ impl Frame {
         }
     }
 
-    pub fn lookup(&self, var: usize) -> Option<Rc<Value>> {
+    pub fn lookup(&self, var: usize) -> Option<Rc<Thunk>> {
         self.variables.get(&var).cloned()
     }
 
-    pub fn with_variable(&self, var: usize, value: Rc<Value>) -> Frame {
+    pub fn with_variable(&self, var: usize, value: Rc<Thunk>) -> Frame {
         Self {
             variables: self.variables.update(var, value),
         }
@@ -381,10 +410,9 @@ fn eval_unary_op(frame: Rc<Frame>, op: UnaryOp, operand: &Node) -> EvalResult<Va
     }
 }
 
-fn eval_apply(frame: Rc<Frame>, func: &Node, arg: &Node) -> EvalResult<Value> {
-    // 本来は遅延評価しないといけない
+fn eval_apply(frame: Rc<Frame>, func: &Node, arg: Rc<Node>) -> EvalResult<Value> {
     let f_value = eval(Rc::clone(&frame), func)?;
-    let a_value = eval(frame, arg)?;
+    let a_value = Thunk::new(frame, arg);
     type_check!(
         f_value,
         Value::Closure(c_frame, c_var, c_body),
@@ -396,10 +424,6 @@ fn eval_apply(frame: Rc<Frame>, func: &Node, arg: &Node) -> EvalResult<Value> {
 }
 
 fn eval_bin_op(frame: Rc<Frame>, op: BinOp, lhs: &Node, rhs: &Node) -> EvalResult<Value> {
-    // Apply だけは評価順序が違うので別で実装する
-    if op == BinOp::Apply {
-        return eval_apply(frame, lhs, rhs);
-    }
     let l_value = eval(Rc::clone(&frame), lhs)?;
     let r_value = eval(frame, rhs)?;
     match op {
@@ -467,7 +491,6 @@ fn eval_bin_op(frame: Rc<Frame>, op: BinOp, lhs: &Node, rhs: &Node) -> EvalResul
             let ret = s.chars().skip(n as usize).collect(); // TODO: パフォーマンスの問題があるかも
             Ok(Value::String(ret))
         }
-        BinOp::Apply => unreachable!(),
     }
 }
 
@@ -487,7 +510,7 @@ fn eval_lambda(frame: Rc<Frame>, var: usize, body: Rc<Node>) -> EvalResult<Value
 
 fn eval_variable(frame: Rc<Frame>, var: usize) -> EvalResult<Value> {
     match frame.lookup(var) {
-        Some(value) => Ok((*value).clone()), // TODO: この clone はパフォーマンス的にまずいかも
+        Some(value) => Ok(value.force()?),
         None => Err(EvalError::UndefinedVariable(var)),
     }
 }
@@ -497,6 +520,7 @@ pub fn eval(frame: Rc<Frame>, node: &Node) -> EvalResult<Value> {
         Node::Literal(value) => Ok(value.clone()),
         Node::UnaryOp(op, operand) => eval_unary_op(frame, *op, operand),
         Node::BinOp(op, lhs, rhs) => eval_bin_op(frame, *op, lhs, rhs),
+        Node::Apply(func, arg) => eval_apply(frame, func, Rc::clone(arg)),
         Node::If(cond, then, else_) => eval_if(frame, cond, then, else_),
         Node::Lambda(var, body) => eval_lambda(frame, *var, Rc::clone(body)),
         Node::Variable(var) => eval_variable(frame, *var),
@@ -524,5 +548,24 @@ mod tests {
         let value = eval_str(source).unwrap();
         let expected = "Self-check OK, send `solve language_test 4w3s0m3` to claim points for it";
         assert_eq!(value, Value::String(expected.into()));
+    }
+
+    #[test]
+    fn lazy() {
+        let source = r#"B$ L# B$ L" B+ v" v" B* I$ I# v8"#;
+        let value = eval_str(source).unwrap();
+        assert_eq!(value, Value::Int(12));
+    }
+
+    #[test]
+    fn lazy2() {
+        // 無限ループする項: (λx.x x c) (λx.x x c)
+        //                 B$ Lx B$ B$ vx vx I0 Lx B$ B$ vx vx I0
+        // fst 関数: λx. λy. x
+        //          Lx Ly vx
+        // fst 3 loop: B$ B$ Lx Ly vx I$ B$ Lx B$ B$ vx vx I0 Lx B$ B$ vx vx I0
+        let source = r#"B$ B$ Lx Ly vx I$ B$ Lx B$ B$ vx vx I0 Lx B$ B$ vx vx I0"#;
+        let value = eval_str(source).unwrap();
+        assert_eq!(value, Value::Int(3));
     }
 }

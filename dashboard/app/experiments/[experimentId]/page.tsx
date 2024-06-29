@@ -9,7 +9,7 @@ export default async function Page({
 
   const experiment = await prisma.experiment.findFirst({
     where: { id: Number(experimentId) },
-    include: { runs: { include: { success: true, failed: true } } },
+    include: { runs: true },
   });
 
   if (!experiment) {
@@ -39,9 +39,9 @@ export default async function Page({
               <td>{run.course}</td>
               <td>{run.level}</td>
               <td>{run.args}</td>
-              <td>{run.success ? "ok" : run.failed ? "failed" : "running"}</td>
-              <td>{run.success && String(run.success.score)}</td>
-              <td>{run.failed && String(run.failed.error)}</td>
+              <td>{run.score ? "ok" : run.error ? "failed" : "running"}</td>
+              <td>{run.score && String(run.score)}</td>
+              <td>{run.error && String(run.error)}</td>
             </tr>
           ))}
         </tbody>

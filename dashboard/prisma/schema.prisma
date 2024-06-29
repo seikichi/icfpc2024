@@ -23,6 +23,8 @@ model Experiment {
     args   String @db.VarChar(256)
 
     runs Run[]
+
+    @@index([createdAt])
 }
 
 model Run {
@@ -41,4 +43,7 @@ model Run {
     error      String? @db.Text
 
     experiment Experiment? @relation(fields: [experimentId], references: [id])
+
+    @@index([course, level, createdAt])
+    @@index([course, level, score])
 }

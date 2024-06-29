@@ -1,4 +1,4 @@
-use core::eval;
+use base::eval;
 use std::{
     io::{self, Read},
     rc::Rc,

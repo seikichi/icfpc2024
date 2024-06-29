@@ -1,7 +1,7 @@
 mod ai;
 
 use crate::ai::{ChainedAI, HeadAI};
-use core::*;
+use base::*;
 use std::path::PathBuf;
 
 use anyhow::bail;

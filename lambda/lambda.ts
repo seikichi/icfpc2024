@@ -38,7 +38,7 @@ export const solver: Handler = async (rawEvent, _context) => {
     courseDir: "./courses",
     solverDir: path.join("target", "release"),
     bucket: env.BUCKET,
-    experimentId: null,
+    experimentId: event.experimentId,
   });
 };
 

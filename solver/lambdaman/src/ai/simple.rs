@@ -11,26 +11,15 @@ pub struct SimpleChainedAI {}
 impl HeadAI for SimpleHeadAI {
     // BFS AI
     fn solve(&mut self, input: &lambdaman_input::LambdamanInput) -> LambdamanSolution {
-        let mut moves = vec![];
         let h = input.h;
         let w = input.w;
-        let mut sx = 0;
-        let mut sy = 0;
-        let mut foods = vec![];
-        // println!("{:?}", input.field);
-        for y in 0..h {
-            for x in 0..w {
-                let c = input.field[y][x];
-                if c == 'L' {
-                    sx = x;
-                    sy = y;
-                } else if c == '.' {
-                    foods.push((x, y));
-                }
-            }
-        }
+        let (mut sx, mut sy) = input.find_start_position();
+        let foods = input.make_food_positions();
+        let food_indexs = input.make_food_indexs();
         // println!("{:?}", foods);
         let mut eaten = vec![vec![false; w]; h];
+        let mut moves = vec![];
+        let mut order = vec![];
         for _iter in 0..foods.len() {
             let mut visited = vec![vec![false; w]; h];
             let mut que: VecDeque<(usize, usize, Vec<char>)> = VecDeque::new();
@@ -42,6 +31,7 @@ impl HeadAI for SimpleHeadAI {
                     sy = y;
                     sx = x;
                     moves.append(&mut current_move.clone());
+                    order.push(food_indexs[&(x, y)]);
                     // println!("{} {}", x, y);
                     break;
                 }

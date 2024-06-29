@@ -72,7 +72,7 @@ export class InfraStack extends cdk.Stack {
     bucket.grantReadWrite(solver);
 
     // Experiment
-    const experiment = new lambda.DockerImageFunction(this, "Solver", {
+    const experiment = new lambda.DockerImageFunction(this, "Experiment", {
       code: lambda.DockerImageCode.fromImageAsset("../", {
         file: "lambda/Dockerfile",
         cmd: ["lambda.experiment"],

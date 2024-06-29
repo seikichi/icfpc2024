@@ -73,8 +73,11 @@ struct Opt {
 }
 
 // 標準出力に JSON 形式で出力し、Lambda の JS が DB に書き込む
-// #[derive(Debug, serde::Serialize)]
-// struct Output {}
+#[derive(Debug, serde::Serialize)]
+struct Output {
+    solution: String,
+    score: usize, // usize でなくてもいい (JS から見たら一緒...)
+}
 
 fn parse_ai_string(
     ai_str: &str,
@@ -170,7 +173,12 @@ pub fn run() -> anyhow::Result<()> {
     // let output = Output { score: *score };
     // println!("{}", serde_json::to_string(&output)?);
 
-    println!("{}", String::from_iter(solution.moves.iter()));
+    let answer = String::from_iter(solution.moves.iter());
+    let output = Output {
+        solution: answer.clone(),
+        score: answer.len(),
+    };
+    println!("{}", serde_json::to_string(&output)?);
 
     Ok(())
 }

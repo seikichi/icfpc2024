@@ -4,6 +4,7 @@ import { Result, err } from "@/lib/result";
 import { useState, useCallback } from "react";
 import { communicate } from "./actions";
 import { z } from "zod";
+import { SubmitButton } from "@/components/submit";
 
 export default function Page() {
   const [response, setResponse] = useState<Result<
@@ -11,33 +12,27 @@ export default function Page() {
     string
   > | null>(null);
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      const fd = new FormData(e.currentTarget);
-      try {
-        const message = z.string().parse(fd.get("message"));
-        console.log({ message });
-        setResponse(await communicate(message));
-      } catch (e) {
-        console.error(e);
-        setResponse(err(JSON.stringify(e)));
-      }
-    },
-    []
-  );
+  const formAction = useCallback(async (formData: FormData) => {
+    try {
+      const message = z.string().parse(formData.get("message"));
+      setResponse(await communicate(message));
+    } catch (e) {
+      console.error(e);
+      setResponse(err(JSON.stringify(e)));
+    }
+  }, []);
 
   return (
     <>
       <h1>Communicate</h1>
-      <form onSubmit={handleSubmit}>
+      <form action={formAction}>
         <label htmlFor="message"></label>
         <textarea
           id="message"
           name="message"
           defaultValue="get index"
         ></textarea>
-        <button>send</button>
+        <SubmitButton>send</SubmitButton>
       </form>
       <div>
         {response && response.ok && (

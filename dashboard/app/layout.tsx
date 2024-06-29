@@ -32,6 +32,9 @@ export default function RootLayout({
             <li>
               <a href="/browse/index">Browse Galaxy</a>
             </li>
+            <li>
+              <a href="/experiments">Experiments</a>
+            </li>
           </ul>
         </nav>
         <main>{children}</main>

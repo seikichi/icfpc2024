@@ -52,9 +52,9 @@ export class InfraStack extends cdk.Stack {
           ? {
               cacheTo: {
                 type: "gha",
-                params: { mode: "max", scope: "solver" },
+                params: { mode: "max" /** scope: "solver" **/ },
               },
-              cacheFrom: [{ type: "gha", params: { scope: "solver" } }],
+              cacheFrom: [{ type: "gha" /** params: { scope: "solver" } **/ }],
               outputs: ["type=docker"],
             }
           : {}),
@@ -71,29 +71,35 @@ export class InfraStack extends cdk.Stack {
 
     bucket.grantReadWrite(solver);
 
-    // Lambda Example
-    // const exampleFn = new lambda.DockerImageFunction(this, "Example", {
-    //   code: lambda.DockerImageCode.fromImageAsset("../", {
-    //     file: "lambda/Dockerfile",
-    //     cmd: ["example.handler"],
-    //     ...(isCI
-    //       ? {
-    //           cacheTo: {
-    //             type: "gha",
-    //             params: { mode: "max", scope: "example" },
-    //           },
-    //           cacheFrom: [{ type: "gha", params: { scope: "example" } }],
-    //           outputs: ["type=docker"],
-    //         }
-    //       : {}),
-    //   }),
-    //   timeout: cdk.Duration.minutes(15),
-    //   memorySize: 128,
-    //   environment: {
-    //     COMMIT_ID: commitHash,
-    //     BUCKET: bucket.bucketName,
-    //   },
-    // });
-    // bucket.grantReadWrite(exampleFn);
+    // Experiment
+    const experiment = new lambda.DockerImageFunction(this, "Solver", {
+      code: lambda.DockerImageCode.fromImageAsset("../", {
+        file: "lambda/Dockerfile",
+        cmd: ["lambda.experiment"],
+        ...(isCI
+          ? {
+              cacheTo: {
+                type: "gha",
+                params: { mode: "max" /** scope: "experiment" **/ },
+              },
+              cacheFrom: [
+                { type: "gha" /** params: { scope: "experiment" } **/ },
+              ],
+              outputs: ["type=docker"],
+            }
+          : {}),
+      }),
+      timeout: cdk.Duration.minutes(15),
+      memorySize: 256,
+      environment: {
+        COMMIT_ID: commitHash,
+        SOLVER_LAMBDA_ARN: solver.functionArn,
+        // BUCKET: bucket.bucketName,
+        // POSTGRES_PRISMA_URL: env.POSTGRES_PRISMA_URL,
+        // POSTGRES_URL_NON_POOLING: env.POSTGRES_URL_NON_POOLING,
+      },
+    });
+
+    solver.grantInvoke(experiment);
   }
 }

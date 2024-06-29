@@ -4,7 +4,13 @@ import * as path from "path";
 
 import { z } from "zod";
 
-const Env = z.object({
+import {
+  LambdaClient,
+  InvokeCommand,
+  InvocationType,
+} from "@aws-sdk/client-lambda";
+
+const SolverEnv = z.object({
   COMMIT_ID: z.string().min(1),
 });
 
@@ -15,7 +21,7 @@ const SolverEvent = z.object({
 });
 
 export const solver: Handler = async (rawEvent, _context) => {
-  const env = Env.parse(process.env);
+  const env = SolverEnv.parse(process.env);
   const event = SolverEvent.parse(rawEvent);
 
   await solve({
@@ -27,48 +33,55 @@ export const solver: Handler = async (rawEvent, _context) => {
   });
 };
 
-// const ExperimentEvent = z.object({
-//   course: z.string(),
-//   levels: z.string().min(1).max(32),
-//   tag: z.string().max(16),
-//   args: z.string().max(256),
-// });
+const ExperimentEnv = z.object({
+  COMMIT_ID: z.string().min(1),
+  SOLVER_LAMBDA_ARN: z.string().startsWith("arn:aws:lambda:"),
+});
 
-// export const experiment: Handler = async (rawEvent, _context) => {
-//   // const env = Env.parse(process.env);
-//   const event = ExperimentEvent.parse(rawEvent);
+const ExperimentEvent = z.object({
+  course: z.string(),
+  levels: z.string().min(1).max(32),
+  tag: z.string().max(16),
+  args: z.string().max(256),
+});
 
-//   // TODO: insert record
+export const experiment: Handler = async (rawEvent, _context) => {
+  const env = ExperimentEnv.parse(process.env);
+  const event = ExperimentEvent.parse(rawEvent);
 
-//   // Parse levels (e.g., "1,2,3-5,7" => {1, 2, 3, 4, 5, 7})
-//   const ids: Set<number> = new Set([]);
-//   for (const ps of event.levels.split(",")) {
-//     if (ps.includes("-")) {
-//       const [fromS, toS] = ps.split("-");
-//       const [from, to] = [parseInt(fromS, 10), parseInt(toS, 10)];
-//       for (let i = from; i <= to; i++) {
-//         ids.add(i);
-//       }
-//     } else {
-//       ids.add(parseInt(ps, 10));
-//     }
-//   }
+  // TODO: insert record
 
-//   for (const level of Array.from(ids)) {
-//       console.log(`invoke: ${event.course}${level}`);
+  // Parse levels (e.g., "1,2,3-5,7" => {1, 2, 3, 4, 5, 7})
+  const ids: Set<number> = new Set([]);
+  for (const ps of event.levels.split(",")) {
+    if (ps.includes("-")) {
+      const [fromS, toS] = ps.split("-");
+      const [from, to] = [parseInt(fromS, 10), parseInt(toS, 10)];
+      for (let i = from; i <= to; i++) {
+        ids.add(i);
+      }
+    } else {
+      ids.add(parseInt(ps, 10));
+    }
+  }
 
-//     const solverEvent: z.infer<typeof SolverEvent> = {
-//       course: event.course,
-//       level,
-//       args: event.args,
-//     };
+  const lambda = new LambdaClient({ region: "ap-northeast-1" });
 
-//     await lambda.send(
-//       new InvokeCommand({
-//         InvocationType: InvocationType.Event,
-//         FunctionName: env.SOLVER_LAMBDA_ARN,
-//         Payload: JSON.stringify(solverEvent),
-//       })
-//     );
-//   }
-// };
+  for (const level of Array.from(ids)) {
+    console.log(`invoke: ${event.course}${level}`);
+
+    const solverEvent: z.infer<typeof SolverEvent> = {
+      course: event.course,
+      level,
+      args: event.args,
+    };
+
+    await lambda.send(
+      new InvokeCommand({
+        InvocationType: InvocationType.Event,
+        FunctionName: env.SOLVER_LAMBDA_ARN,
+        Payload: JSON.stringify(solverEvent),
+      })
+    );
+  }
+};

@@ -1,27 +1,28 @@
-import * as child_process from "child_process";
 import { Handler } from "aws-lambda";
-
+import { solve } from "./solver";
 import * as path from "path";
-import { promisify } from "util";
 
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
+import { z } from "zod";
 
-const exec = promisify(child_process.exec);
+const Env = z.object({
+  COMMIT_ID: z.string().min(1),
+});
 
-export const handler: Handler = async (_event, _context) => {
-  try {
-    console.log("# of problems:", await prisma.problem.count());
-    const args = "--ai Simple,Simple";
-    const solverPath = path.join("target", "release", "cli");
-    const command = `${solverPath} ${args}`;
-    console.log(`run: ${command}`);
+const SolverEvent = z.object({
+  course: z.string(),
+  level: z.number(),
+  args: z.string(),
+});
 
-    const { stdout, stderr } = await exec(command);
+export const solver: Handler = async (rawEvent, _context) => {
+  const env = Env.parse(process.env);
+  const event = SolverEvent.parse(rawEvent);
 
-    console.log("stdout:", stdout);
-    console.log("stderr:", stderr);
-  } catch (e) {
-    console.error(e);
-  }
+  await solve({
+    ...event,
+    commitId: env.COMMIT_ID,
+    tmpDir: "/tmp",
+    courseDir: "./cources",
+    solverDir: path.join("target", "release"),
+  });
 };

@@ -47,7 +47,7 @@ export class InfraStack extends cdk.Stack {
     const solver = new lambda.DockerImageFunction(this, "Solver", {
       code: lambda.DockerImageCode.fromImageAsset("../", {
         file: "lambda/Dockerfile",
-        cmd: ["lambda.handler"],
+        cmd: ["lambda.solver"],
         ...(isCI
           ? {
               cacheTo: {
@@ -63,37 +63,37 @@ export class InfraStack extends cdk.Stack {
       memorySize: 256,
       environment: {
         COMMIT_ID: commitHash,
-        BUCKET: bucket.bucketName,
-        POSTGRES_PRISMA_URL: env.POSTGRES_PRISMA_URL,
-        POSTGRES_URL_NON_POOLING: env.POSTGRES_URL_NON_POOLING,
+        // BUCKET: bucket.bucketName,
+        // POSTGRES_PRISMA_URL: env.POSTGRES_PRISMA_URL,
+        // POSTGRES_URL_NON_POOLING: env.POSTGRES_URL_NON_POOLING,
       },
     });
 
     bucket.grantReadWrite(solver);
 
     // Lambda Example
-    const exampleFn = new lambda.DockerImageFunction(this, "Example", {
-      code: lambda.DockerImageCode.fromImageAsset("../", {
-        file: "lambda/Dockerfile",
-        cmd: ["example.handler"],
-        ...(isCI
-          ? {
-              cacheTo: {
-                type: "gha",
-                params: { mode: "max", scope: "example" },
-              },
-              cacheFrom: [{ type: "gha", params: { scope: "example" } }],
-              outputs: ["type=docker"],
-            }
-          : {}),
-      }),
-      timeout: cdk.Duration.minutes(15),
-      memorySize: 128,
-      environment: {
-        COMMIT_ID: commitHash,
-        BUCKET: bucket.bucketName,
-      },
-    });
-    bucket.grantReadWrite(exampleFn);
+    // const exampleFn = new lambda.DockerImageFunction(this, "Example", {
+    //   code: lambda.DockerImageCode.fromImageAsset("../", {
+    //     file: "lambda/Dockerfile",
+    //     cmd: ["example.handler"],
+    //     ...(isCI
+    //       ? {
+    //           cacheTo: {
+    //             type: "gha",
+    //             params: { mode: "max", scope: "example" },
+    //           },
+    //           cacheFrom: [{ type: "gha", params: { scope: "example" } }],
+    //           outputs: ["type=docker"],
+    //         }
+    //       : {}),
+    //   }),
+    //   timeout: cdk.Duration.minutes(15),
+    //   memorySize: 128,
+    //   environment: {
+    //     COMMIT_ID: commitHash,
+    //     BUCKET: bucket.bucketName,
+    //   },
+    // });
+    // bucket.grantReadWrite(exampleFn);
   }
 }

@@ -167,8 +167,17 @@ fn test_parse_integer() {
     assert_eq!(*node, Node::Literal(Value::Int(1337)));
 }
 
+static TABLE: &'static [u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`|~ \n";
+
+static RTABLE: Lazy<HashMap<u8, usize>> = Lazy::new(|| {
+    let mut m = HashMap::new();
+    for (i, c) in TABLE.iter().enumerate() {
+        m.insert(*c, i);
+    }
+    m
+});
+
 fn parse_string(body: &str) -> ParseResult<Box<Node>> {
-    static TABLE: &'static [u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`|~ \n";
     let mut ret = String::new();
     for c in body.chars() {
         let i = c as usize;
@@ -315,16 +324,6 @@ macro_rules! type_check {
         };
     };
 }
-
-static TABLE: &'static [u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`|~ \n";
-
-static RTABLE: Lazy<HashMap<u8, usize>> = Lazy::new(|| {
-    let mut m = HashMap::new();
-    for (i, c) in TABLE.iter().enumerate() {
-        m.insert(*c, i);
-    }
-    m
-});
 
 fn string_to_int_94(s: &str) -> EvalResult<i64> {
     let mut ret = 0;

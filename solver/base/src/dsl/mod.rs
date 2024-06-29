@@ -72,5 +72,16 @@ mod tests {
         );
         // paren
         doit("paren", "(((0)))", "I!");
+        // comment
+        doit(
+            "line comment",
+            "-- this is comment\n1 + 2",
+            "B+ I\" I#",
+        );
+        doit(
+            "range comment",
+            "1 + {- this is comment -} 2",
+            "B+ I\" I#",
+        );
     }
 }

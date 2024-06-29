@@ -18,6 +18,8 @@ export default async function Page({
     return <></>;
   }
 
+  experiment.runs.sort((a, b) => a.level - b.level);
+
   return (
     <>
       <h1>Experiment {experimentId}</h1>

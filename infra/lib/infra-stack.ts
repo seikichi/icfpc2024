@@ -60,7 +60,7 @@ export class InfraStack extends cdk.Stack {
           : {}),
       }),
       timeout: cdk.Duration.minutes(15),
-      memorySize: 256,
+      memorySize: 512,
       environment: {
         COMMIT_ID: commitHash,
         BUCKET: bucket.bucketName,

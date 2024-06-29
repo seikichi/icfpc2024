@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["core", "cli", "lambdaman", "spaceship", "wasm", "eval"]
+members = ["base", "lambdaman", "spaceship", "wasm", "eval"]
 
 # for flamegraph
 #[profile.release]

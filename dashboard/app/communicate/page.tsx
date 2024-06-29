@@ -1,12 +1,14 @@
 "use client";
 
 import { Result, err } from "@/lib/result";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { communicate } from "./actions";
 import { z } from "zod";
 import { SubmitButton } from "@/components/submit";
 
 export default function Page() {
+  const formRef = useRef<HTMLFormElement>(null);
+
   const [response, setResponse] = useState<Result<
     { raw: string; evaluated: string | null },
     string
@@ -19,13 +21,15 @@ export default function Page() {
     } catch (e) {
       console.error(e);
       setResponse(err(JSON.stringify(e)));
+    } finally {
+      formRef.current?.reset();
     }
   }, []);
 
   return (
     <>
       <h1>Communicate</h1>
-      <form action={formAction}>
+      <form ref={formRef} action={formAction}>
         <label htmlFor="message"></label>
         <textarea
           id="message"

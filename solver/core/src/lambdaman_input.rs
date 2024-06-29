@@ -1,4 +1,4 @@
-use std::{io, path::Path};
+use std::{collections::HashMap, io, path::Path};
 
 #[derive(Clone, Debug)]
 pub struct LambdamanInput {
@@ -12,6 +12,38 @@ impl LambdamanInput {
         let h = field.len();
         let w = field[0].len();
         LambdamanInput { field, w, h }
+    }
+    pub fn find_start_position(&self) -> (usize, usize) {
+        for y in 0..self.h {
+            for x in 0..self.w {
+                if self.field[y][x] == 'L' {
+                    return (x, y);
+                }
+            }
+        }
+        panic!("Lambdaman not found");
+    }
+    pub fn make_food_positions(&self) -> Vec<(usize, usize)> {
+        let mut food_positions = vec![];
+        for y in 0..self.h {
+            for x in 0..self.w {
+                if self.field[y][x] == '.' {
+                    food_positions.push((x, y));
+                }
+            }
+        }
+        food_positions
+    }
+    pub fn make_food_indexs(&self) -> HashMap<(usize, usize), usize> {
+        let mut food_indexs = HashMap::new();
+        for y in 0..self.h {
+            for x in 0..self.w {
+                if self.field[y][x] == '.' {
+                    food_indexs.insert((x, y), food_indexs.len());
+                }
+            }
+        }
+        food_indexs
     }
 }
 

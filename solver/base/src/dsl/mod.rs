@@ -63,8 +63,10 @@ mod tests {
         // lambda
         doit(
             "lambda",
-            r#"(\v2 -> \v3 -> v2) ("Hello" . " World!") 42"#,
+            r#"((\v2 -> \v3 -> v2) ("Hello" . " World!")) 42"#,
             "B$ B$ L# L$ v# B. SB%,,/ S}Q/2,$_ IK",
         );
+        // paren
+        doit("paren", "(((0)))", "I!");
     }
 }

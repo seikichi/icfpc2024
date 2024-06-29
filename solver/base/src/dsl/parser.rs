@@ -62,50 +62,74 @@ fn parse_expr(tokens: &[Token]) -> Result<(Box<Expr>, &[Token])> {
         let Ok((t_binop, tokens_)) = take_one(tokens) else {
             break;
         };
-        let (expr_, tokens_) = parse_term(tokens_)?;
         match t_binop {
             Token::Plus => {
+                let (expr_, tokens_) = parse_term(tokens_)?;
                 expr = Box::new(Expr::BinOp(BinOp::Add, expr, expr_));
+                tokens = tokens_;
             }
             Token::Minus => {
+                let (expr_, tokens_) = parse_term(tokens_)?;
                 expr = Box::new(Expr::BinOp(BinOp::Sub, expr, expr_));
+                tokens = tokens_;
             }
             Token::Asterisk => {
+                let (expr_, tokens_) = parse_term(tokens_)?;
                 expr = Box::new(Expr::BinOp(BinOp::Mul, expr, expr_));
+                tokens = tokens_;
             }
             Token::Slash => {
+                let (expr_, tokens_) = parse_term(tokens_)?;
                 expr = Box::new(Expr::BinOp(BinOp::Div, expr, expr_));
+                tokens = tokens_;
             }
             Token::Percent => {
+                let (expr_, tokens_) = parse_term(tokens_)?;
                 expr = Box::new(Expr::BinOp(BinOp::Mod, expr, expr_));
+                tokens = tokens_;
             }
             Token::Lt => {
+                let (expr_, tokens_) = parse_term(tokens_)?;
                 expr = Box::new(Expr::BinOp(BinOp::Lt, expr, expr_));
+                tokens = tokens_;
             }
             Token::Gt => {
+                let (expr_, tokens_) = parse_term(tokens_)?;
                 expr = Box::new(Expr::BinOp(BinOp::Gt, expr, expr_));
+                tokens = tokens_;
             }
             Token::EqEq => {
+                let (expr_, tokens_) = parse_term(tokens_)?;
                 expr = Box::new(Expr::BinOp(BinOp::Eq, expr, expr_));
+                tokens = tokens_;
             }
             Token::OrOr => {
+                let (expr_, tokens_) = parse_term(tokens_)?;
                 expr = Box::new(Expr::BinOp(BinOp::Or, expr, expr_));
+                tokens = tokens_;
             }
             Token::AndAnd => {
+                let (expr_, tokens_) = parse_term(tokens_)?;
                 expr = Box::new(Expr::BinOp(BinOp::And, expr, expr_));
+                tokens = tokens_;
             }
             Token::Dot => {
+                let (expr_, tokens_) = parse_term(tokens_)?;
                 expr = Box::new(Expr::BinOp(BinOp::Concat, expr, expr_));
+                tokens = tokens_;
             }
             Token::T => {
+                let (expr_, tokens_) = parse_term(tokens_)?;
                 expr = Box::new(Expr::BinOp(BinOp::Take, expr, expr_));
+                tokens = tokens_;
             }
             Token::D => {
+                let (expr_, tokens_) = parse_term(tokens_)?;
                 expr = Box::new(Expr::BinOp(BinOp::Drop, expr, expr_));
+                tokens = tokens_;
             }
             _ => break,
         }
-        tokens = tokens_;
     }
     Ok((expr, tokens))
 }

@@ -99,7 +99,10 @@ function renderMapToCanvas(map: string, canvas: HTMLCanvasElement) {
   const PILL_COLOR = "#fdff00";
   const LAMBDA_COLOR = "#d03e19";
 
-  const cells = map.split("\n").map((line) => Array.from(line));
+  const cells = map
+    .trim()
+    .split("\n")
+    .map((line) => Array.from(line));
   const height = cells.length;
   const width = cells[0].length;
 

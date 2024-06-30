@@ -204,6 +204,10 @@ impl Simulator {
         for (&(x, y), &cell) in add_cells.iter() {
             new_field[y as usize][x as usize] = cell;
         }
+        if new_field == self.boards.last().unwrap().field {
+            // TODO same board check
+            panic!("no reduce");
+        }
         self.boards.push(Board {
             left: 0,
             up: 0,

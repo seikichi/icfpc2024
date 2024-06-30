@@ -1,21 +1,22 @@
 #!/usr/bin/ruby
 require 'io/console'
 
-def print_stage(stage, lambda_y, lambda_x)
+def stage_to_string(stage, lambda_y, lambda_x)
+    buffer = ""
     stage.each_with_index do |row, y|
         row.each_with_index do |c, x|
             if y == lambda_y && x == lambda_x
-                print "L "
+                buffer += "L "
             else
-                print "#{c} "
+                buffer += "#{c} "
             end
         end
-        puts
+        buffer += "\n"
     end
+    buffer
 end
 
 def can_move_to(stage, y, x)
-    puts stage[y][x]
     y >= 0 && y < stage.size && x >= 0 && x < stage[y].size && stage[y][x] != '#'
 end
 
@@ -53,9 +54,11 @@ def main
         lambda_x = state.lambda_x
         history = state.history
 
-        puts "History: #{history}"
-        print_stage(stage, lambda_y, lambda_x)
-        puts "[hjkl][u][q]: "
+        puts(
+            "History: #{history}\n" +
+            "#{stage_to_string(stage, lambda_y, lambda_x)}" +
+            "[hjkl][u][q]: "
+        )
 
         dy = 0
         dx = 0

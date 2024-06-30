@@ -41,6 +41,9 @@ export default function RootLayout({
             <li>
               <a href="/dsl">DSL</a>
             </li>
+            <li>
+              <a href="/lambdaman">Lambdaman</a>
+            </li>
           </ul>
         </nav>
         <main>{children}</main>

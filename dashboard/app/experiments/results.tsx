@@ -2,13 +2,13 @@ import { prisma } from "@/lib/prisma";
 
 export default async function ExperimentResults() {
   const experiments = await prisma.experiment.findMany({
-    take: 10,
+    take: 20,
     orderBy: { createdAt: "desc" },
   });
 
   return (
     <>
-      <h2>Experiment Results</h2>
+      <h2>Experiment Results (Last 20)</h2>
 
       <table>
         <thead>

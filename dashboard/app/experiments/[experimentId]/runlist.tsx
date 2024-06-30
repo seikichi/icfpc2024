@@ -4,10 +4,10 @@ import { Prisma } from "@prisma/client";
 import { generateSolutionUrl } from "./actions";
 
 type Props = {
-  experiment: Prisma.ExperimentGetPayload<{ include: { runs: true } }>;
+  runs: Prisma.RunGetPayload<{}>[];
 };
 
-export default function RunList({ experiment }: Props) {
+export default function RunList({ runs }: Props) {
   const onDownload = async (course: string, level: number, runId: number) => {
     try {
       const res = await generateSolutionUrl(runId);
@@ -47,11 +47,15 @@ export default function RunList({ experiment }: Props) {
         </tr>
       </thead>
       <tbody>
-        {experiment.runs.map((run) => (
+        {runs.map((run) => (
           <tr key={run.id}>
             <td>{run.id}</td>
             <td>{run.course}</td>
-            <td>{run.level}</td>
+            <td>
+              <a href={`/courses/${run.course}/levels/${run.level}`}>
+                {run.level}
+              </a>
+            </td>
             <td>{run.args}</td>
             <td>{run.score ? "ok" : run.error ? "failed" : "running"}</td>
             <td>{run.score && String(run.score)}</td>

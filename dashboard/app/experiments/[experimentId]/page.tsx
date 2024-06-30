@@ -20,11 +20,10 @@ export default async function Page({
   }
 
   experiment.runs.sort((a, b) => a.level - b.level);
-
   return (
     <>
       <h1>Experiment {experimentId}</h1>
-      <RunList experiment={experiment} />
+      <RunList runs={experiment.runs} />
     </>
   );
 }

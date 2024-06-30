@@ -98,7 +98,7 @@ def main
         states.push(new_state)
     end
 
-    puts history
+    puts states.last.history
 end
 
 main

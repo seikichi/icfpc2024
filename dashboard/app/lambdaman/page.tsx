@@ -297,8 +297,6 @@ export default function Page() {
     })();
   }, [level]);
 
-  console.log({ code });
-
   return (
     <>
       <h1>Lambdaman</h1>

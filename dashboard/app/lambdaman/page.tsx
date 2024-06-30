@@ -225,7 +225,7 @@ export default function Page() {
   const [error, setError] = useState<string | null>(null);
   const [level, setLevel] = useState("");
   const [map, setMap] = useState<string | null>(null);
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(DEFAULT_CODE);
 
   const onEditorChange = useCallback((code: string) => {
     setCode(code);
@@ -297,6 +297,8 @@ export default function Page() {
     })();
   }, [level]);
 
+  console.log({ code });
+
   return (
     <>
       <h1>Lambdaman</h1>
@@ -333,7 +335,6 @@ export default function Page() {
               theme="github"
               name="code"
               value={code}
-              defaultValue={DEFAULT_CODE}
               style={{ width: "100%", boxSizing: "border-box" }}
               editorProps={{ $blockScrolling: true }}
               onChange={onEditorChange}

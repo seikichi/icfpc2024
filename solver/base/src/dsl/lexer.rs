@@ -155,6 +155,7 @@ fn lex_one(input: &str) -> LexResult {
             "else" => Token::Else,
             "let" => Token::Let,
             "rec" => Token::Rec,
+            "in" => Token::In,
             "T" => Token::T,
             "D" => Token::D,
             _ => Token::Identifier(s.to_owned().into()),

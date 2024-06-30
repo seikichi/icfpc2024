@@ -79,5 +79,15 @@ pub fn codegen(expr: &Expr) -> Vec<String> {
             ret.extend(codegen(else_));
             ret
         }
+        Expr::Let(name, bound, body) => {
+            let id = BigInt::from(name.id());
+            let mut ret = vec![
+                "B$".into(),
+                format!("L{}", encode_int(id)),
+            ];
+            ret.extend(codegen(body));
+            ret.extend(codegen(bound));
+            ret
+        }
     }
 }

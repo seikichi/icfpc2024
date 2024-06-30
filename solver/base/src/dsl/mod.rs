@@ -83,6 +83,12 @@ mod tests {
             "1 + {- this is comment -} 2",
             "B+ I\" I#",
         );
+        // let
+        doit(
+            "let expression",
+            "let foo = 1 + 2 in foo * foo",
+            "B$ L% B* v% v% B+ I\" I#",
+        );
     }
 
     #[test]

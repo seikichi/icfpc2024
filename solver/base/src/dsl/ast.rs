@@ -16,13 +16,5 @@ pub enum Expr {
     UnaryOp(UnaryOp, Box<Expr>),
     BinOp(BinOp, Box<Expr>, Box<Expr>),
     Apply(Box<Expr>, Box<Expr>),
-    //Let(Symbol, Box<Expr>, Box<Expr>, LetType),
+    Let(Symbol, Box<Expr>, Box<Expr>),
 }
-
-/*
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum LetType {
-    Normal,
-    Rec,
-}
-*/

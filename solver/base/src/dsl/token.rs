@@ -17,6 +17,7 @@ pub enum Token {
     Else,
     Let,
     Rec,
+    In,
 
     Dot,
     Colon,

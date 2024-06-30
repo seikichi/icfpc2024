@@ -128,8 +128,6 @@ function compress(str: string) {
 }
 
 function packInt(course: string, level: number, solution: string) {
-  const prefix = encodeString(`solve ${course}${level} `);
-
   // packint
   const body =
     'BD I" B$ B$ L! B$ L" B$ v! B$ v" v" L" B$ v! B$ v" v" L# L$ ? B= v$ I! S B. B$ v# B/ v$ I% BT I" BD B% v$ I% SFL>O';
@@ -153,8 +151,87 @@ function packInt(course: string, level: number, solution: string) {
     packInt = packInt * BigInt(4) + BigInt(mapping[c]);
   }
 
+  const prefix = encodeString(`solve ${course}${level} `);
   const code = `B. ${prefix} ${body} ${encodeInt(packInt)}`;
-  console.log({ encodeInt: code });
+  // console.log({ encodeInt: code });
+  return code;
+}
+
+function rlpack(course: string, level: number, solution: string) {
+  function runLength(input: string): [string, number][] {
+    if (input.length === 0) {
+      return [];
+    }
+    let prev = input[0];
+    let run = 1;
+    let ret: [string, number][] = [];
+    for (let c of input.slice(1)) {
+      if (c === prev) {
+        run += 1;
+      } else {
+        ret.push([prev, run]);
+        prev = c;
+        run = 1;
+      }
+    }
+    ret.push([prev, run]);
+    return ret;
+  }
+
+  function splitTooLargeRuns(
+    runs: [string, number][],
+    nLengthBits: number
+  ): [string, number][] {
+    const maxRun = 2 ** nLengthBits - 1;
+    let ret: [string, number][] = [];
+    for (let [c, run] of runs) {
+      while (run > maxRun) {
+        ret.push([c, maxRun]);
+        run -= maxRun;
+      }
+      ret.push([c, run]);
+    }
+    return ret;
+  }
+
+  function runsToInt(runs: [string, number][], nLengthBits: number): bigint {
+    let ret = BigInt(1);
+    for (let [c, run] of runs) {
+      if (run >= 2 ** nLengthBits) {
+        throw new Error(`run is too large: ${c} ${run}`);
+      }
+      ret = (ret << BigInt(nLengthBits)) + BigInt(run);
+      const d = "LRDU".indexOf(c);
+      ret = (ret << BigInt(2)) + BigInt(d);
+    }
+    return ret;
+  }
+
+  function encodeInt(n: bigint): string {
+    if (n === BigInt(0)) {
+      return "I!";
+    }
+    let ret = "";
+    while (n > BigInt(0)) {
+      ret += String.fromCharCode(Number(n % BigInt(94)) + 33);
+      n /= BigInt(94);
+    }
+    return "I" + ret.split("").reverse().join("");
+  }
+
+  function decoder(n: bigint): string {
+    const code = encodeInt(n);
+    return `B$ L! B$ L$ B$ B$ v! L& L( ? B= v( I! S B$ L) B$ L* B. B$ v& B/ v( I#e B$ B$ v$ v) v* B% B/ v( I% Ia BT I" BD B% v( I% SFL>O ${code} L% B$ v! L& L' ? B= v' I! S B. B$ v& B- v' I" v% L" B$ L# B$ v" B$ v# v# L# B$ v" B$ v# v#`;
+  }
+
+  const N_LENGTH_BITS = 6;
+  const runs = runLength(solution);
+  const splitRuns = splitTooLargeRuns(runs, N_LENGTH_BITS);
+  const encoded = runsToInt(splitRuns, N_LENGTH_BITS);
+
+  const prefix = encodeString(`solve ${course}${level} `);
+  const code = `B. ${prefix} ${decoder(encoded)}`;
+  console.log(code);
   return code;
 }
 
@@ -193,7 +270,7 @@ function packInt(course: string, level: number, solution: string) {
         }
 
         const solution = await obj.Body.transformToString();
-        console.log({ solution });
+        // console.log({ solution });
 
         const res = await client.send(`solve ${course}${i} ${solution}`);
         console.log(res);
@@ -208,6 +285,10 @@ function packInt(course: string, level: number, solution: string) {
 
           console.log("int pack...");
           console.log(await client.sendRaw(packInt(course, i, solution)));
+          await new Promise((r) => setTimeout(r, 3000));
+
+          console.log("int rlpack...");
+          console.log(await client.sendRaw(rlpack(course, i, solution)));
           await new Promise((r) => setTimeout(r, 3000));
         }
       } catch (e) {

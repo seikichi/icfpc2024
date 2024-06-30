@@ -84,4 +84,27 @@ mod tests {
             "B+ I\" I#",
         );
     }
+
+    #[test]
+    fn precedence() {
+        let doit = |title: &str, source: &str, expected: &str| {
+            let actual = transpile(source, false).unwrap();
+            assert_eq!(expected, actual, "{}", title);
+        };
+        doit(
+            "arithmetic1",
+            "0 + 1 * 2 - 3 / 4",
+            "B- B+ I! B* I\" I# B/ I$ I%",
+        );
+        doit(
+            "compare1",
+            "1 + 2 < 3 * 4",
+            "B< B+ I\" I# B* I$ I%",
+        );
+        doit(
+            "logical",
+            "0 < 1 && 1 > 0 || 0 == 0",
+            "B| B& B< I! I\" B> I\" I! B= I! I!",
+        );
+    }
 }

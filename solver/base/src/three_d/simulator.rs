@@ -41,13 +41,13 @@ impl Simulator {
         // eval operator
         for y in 0..h {
             for x in 0..w {
-                let left_cell = if x > 1 { field[y][x - 1] } else { Cell::Empty };
+                let left_cell = if x >= 1 { field[y][x - 1] } else { Cell::Empty };
                 let right_cell = if x < w - 1 {
                     field[y][x + 1]
                 } else {
                     Cell::Empty
                 };
-                let up_cell = if y > 1 { field[y - 1][x] } else { Cell::Empty };
+                let up_cell = if y >= 1 { field[y - 1][x] } else { Cell::Empty };
                 let down_cell = if y < h - 1 {
                     field[y + 1][x]
                 } else {
@@ -56,25 +56,25 @@ impl Simulator {
                 // move & not equal & warp operator
                 match field[y][x] {
                     Cell::Right => {
-                        if left_cell == Cell::Empty {
+                        if left_cell != Cell::Empty {
                             remove_cells.insert((x as i64 - 1, y as i64));
                         }
                         check_and_insert(x as i64 + 1, y as i64, left_cell, &mut add_cells);
                     }
                     Cell::Down => {
-                        if up_cell == Cell::Empty {
+                        if up_cell != Cell::Empty {
                             remove_cells.insert((x as i64, y as i64 - 1));
                         }
                         check_and_insert(x as i64, y as i64 + 1, up_cell, &mut add_cells);
                     }
                     Cell::Left => {
-                        if right_cell == Cell::Empty {
+                        if right_cell != Cell::Empty {
                             remove_cells.insert((x as i64 + 1, y as i64));
                         }
                         check_and_insert(x as i64 - 1, y as i64, right_cell, &mut add_cells);
                     }
                     Cell::Up => {
-                        if down_cell == Cell::Empty {
+                        if down_cell != Cell::Empty {
                             remove_cells.insert((x as i64, y as i64 + 1));
                         }
                         check_and_insert(x as i64, y as i64 - 1, down_cell, &mut add_cells);
@@ -95,7 +95,7 @@ impl Simulator {
                         if let Cell::Integer(v) = up_cell {
                             if let Cell::Integer(dx) = left_cell {
                                 if let Cell::Integer(dy) = right_cell {
-                                    if let Cell::Integer(dt) = up_cell {
+                                    if let Cell::Integer(dt) = down_cell {
                                         warps.push((x as i64 - dx, y as i64 - dy, dt, v));
                                     }
                                 }
@@ -107,6 +107,7 @@ impl Simulator {
                 // normal operator
                 if let Cell::Integer(a) = left_cell {
                     if let Cell::Integer(b) = up_cell {
+                        // println!("{} {}", x, y);
                         let value = match field[y as usize][x as usize] {
                             Cell::Plus => Some(Cell::Integer(a + b)),
                             Cell::Minus => Some(Cell::Integer(a - b)),
@@ -182,15 +183,20 @@ impl Simulator {
                 }
             }
             let t = self.boards.len() - dt as usize;
-            self.boards.truncate(t + 1);
-            let mut new_field = self.boards[t].field.clone();
+            self.boards.truncate(t);
+            let mut new_field = self.boards[t - 1].field.clone();
             for &(x, y, _, v) in warps.iter() {
+                if new_field[y as usize][x as usize] == Cell::Submit {
+                    unimplemented!("warp to submit is unimplemented");
+                }
                 new_field[y as usize][x as usize] = Cell::Integer(v);
             }
-            self.boards[t].field = new_field;
+            self.boards[t - 1].field = new_field;
             return None;
         }
         // update board
+        // println!("remove: {:?}", remove_cells);
+        // println!("add: {:?}", add_cells);
         let mut new_field = self.boards.last().unwrap().field.clone();
         for &(x, y) in remove_cells.iter() {
             new_field[y as usize][x as usize] = Cell::Empty;
@@ -231,11 +237,13 @@ fn simulator_step_test() {
   1 @ 2  . .
   . 1 .  . .";
     let input = three_d_input::load_from_str(solution_3d3).unwrap();
-    let mut simulator = Simulator::new(&input, 4, 0);
-    for _t in 0..10 {
+    let mut simulator = Simulator::new(&input, -11, 0);
+    for _t in 0..100 {
         let result = simulator.step();
         if let Some(v) = result {
             println!("answer: {}", v);
+            assert!(v == -1);
+            break;
         } else {
             println!("{}", simulator.boards.last().unwrap());
         }

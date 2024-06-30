@@ -12,12 +12,12 @@ let repeat = \s -> Y (\self -> \n -> if n == 0 then "" else (self self (n - 1)) 
 "solve lambdaman8 " .
 (
   Y (\self -> \i ->
-    if i == 97 then
+    if i == 99 then
       repeat "L" 97
     else
       (repeat
-        (1 T ((i % 4) D "DLUR"))
-        (i / 2 * 2 + 2)
+        (1 T ((i % 4) D "URDL"))
+        (i / 2 * 2)
       ) . (self self (i + 1))
   )
-) 0
+) 2

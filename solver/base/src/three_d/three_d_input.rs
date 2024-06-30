@@ -26,9 +26,12 @@ pub fn load_from_file<P: AsRef<Path>>(path: P) -> io::Result<ThreeDInput> {
 }
 
 pub fn load_from_str(s: &str) -> io::Result<ThreeDInput> {
-    let mut field = vec![];
+    let mut field: Vec<Vec<String>> = vec![];
     let lines: Vec<_> = s.trim().lines().collect::<Vec<_>>();
     for line in lines.iter() {
+        if line.starts_with("solve") {
+            continue;
+        }
         let l = line
             .split_whitespace()
             .map(|s| s.to_string())

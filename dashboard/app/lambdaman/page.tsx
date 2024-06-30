@@ -94,8 +94,10 @@ function useWASM() {
 function renderMapToCanvas(map: string, canvas: HTMLCanvasElement) {
   const CELL_SIZE = 5; // px
   const GRID_COLOR = "#CCCCCC";
-  const DEAD_COLOR = "#FFFFFF";
-  const ALIVE_COLOR = "#000000";
+  const WALL_COLOR = "#000000";
+  const EMPTY_COLOR = "#FFFFFF";
+  const PILL_COLOR = "#fdff00";
+  const LAMBDA_COLOR = "#d03e19";
 
   const cells = map.split("\n").map((line) => Array.from(line));
   const height = cells.length;
@@ -128,9 +130,16 @@ function renderMapToCanvas(map: string, canvas: HTMLCanvasElement) {
 
   for (let row = 0; row < height; row++) {
     for (let col = 0; col < width; col++) {
-      const cell = cells[row][col];
+      const cell = cells[row][col] as Cell;
 
-      ctx.fillStyle = cell === "#" ? DEAD_COLOR : ALIVE_COLOR;
+      ctx.fillStyle =
+        cell === " "
+          ? EMPTY_COLOR
+          : cell === "#"
+            ? WALL_COLOR
+            : cell === "L"
+              ? LAMBDA_COLOR
+              : PILL_COLOR;
 
       ctx.fillRect(
         col * (CELL_SIZE + 1) + 1,
@@ -142,6 +151,9 @@ function renderMapToCanvas(map: string, canvas: HTMLCanvasElement) {
   }
   ctx.stroke();
 }
+
+// pill, lambda, wall, empty
+type Cell = "." | "L" | "#" | " ";
 
 export default function Page() {
   const wasm = useWASM();

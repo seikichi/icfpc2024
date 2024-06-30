@@ -58,26 +58,26 @@ impl Simulator {
                     Cell::Right => {
                         if left_cell != Cell::Empty {
                             remove_cells.insert((x as i64 - 1, y as i64));
+                            check_and_insert(x as i64 + 1, y as i64, left_cell, &mut add_cells);
                         }
-                        check_and_insert(x as i64 + 1, y as i64, left_cell, &mut add_cells);
                     }
                     Cell::Down => {
                         if up_cell != Cell::Empty {
                             remove_cells.insert((x as i64, y as i64 - 1));
+                            check_and_insert(x as i64, y as i64 + 1, up_cell, &mut add_cells);
                         }
-                        check_and_insert(x as i64, y as i64 + 1, up_cell, &mut add_cells);
                     }
                     Cell::Left => {
                         if right_cell != Cell::Empty {
                             remove_cells.insert((x as i64 + 1, y as i64));
+                            check_and_insert(x as i64 - 1, y as i64, right_cell, &mut add_cells);
                         }
-                        check_and_insert(x as i64 - 1, y as i64, right_cell, &mut add_cells);
                     }
                     Cell::Up => {
                         if down_cell != Cell::Empty {
                             remove_cells.insert((x as i64, y as i64 + 1));
+                            check_and_insert(x as i64, y as i64 - 1, down_cell, &mut add_cells);
                         }
-                        check_and_insert(x as i64, y as i64 - 1, down_cell, &mut add_cells);
                     }
                     Cell::NotEqual => {
                         if let Cell::Integer(x) = left_cell {
@@ -203,6 +203,10 @@ impl Simulator {
         }
         for (&(x, y), &cell) in add_cells.iter() {
             new_field[y as usize][x as usize] = cell;
+        }
+        if new_field == self.boards.last().unwrap().field {
+            // TODO same board check
+            panic!("no reduce");
         }
         self.boards.push(Board {
             left: 0,

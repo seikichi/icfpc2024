@@ -91,6 +91,58 @@ function useWASM() {
   };
 }
 
+function renderMapToCanvas(map: string, canvas: HTMLCanvasElement) {
+  const CELL_SIZE = 5; // px
+  const GRID_COLOR = "#CCCCCC";
+  const DEAD_COLOR = "#FFFFFF";
+  const ALIVE_COLOR = "#000000";
+
+  const cells = map.split("\n").map((line) => Array.from(line));
+  const height = cells.length;
+  const width = cells[0].length;
+
+  canvas.height = (CELL_SIZE + 1) * height + 1;
+  canvas.width = (CELL_SIZE + 1) * width + 1;
+
+  console.log("HELLO");
+
+  const ctx = canvas.getContext("2d")!;
+
+  // draw grid
+  ctx.beginPath();
+  ctx.strokeStyle = GRID_COLOR;
+  // Vertical lines.
+  for (let i = 0; i <= width; i++) {
+    ctx.moveTo(i * (CELL_SIZE + 1) + 1, 0);
+    ctx.lineTo(i * (CELL_SIZE + 1) + 1, (CELL_SIZE + 1) * height + 1);
+  }
+  // Horizontal lines.
+  for (let j = 0; j <= height; j++) {
+    ctx.moveTo(0, j * (CELL_SIZE + 1) + 1);
+    ctx.lineTo((CELL_SIZE + 1) * width + 1, j * (CELL_SIZE + 1) + 1);
+  }
+  ctx.stroke();
+
+  // draw cells
+  ctx.beginPath();
+
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      const cell = cells[row][col];
+
+      ctx.fillStyle = cell === "#" ? DEAD_COLOR : ALIVE_COLOR;
+
+      ctx.fillRect(
+        col * (CELL_SIZE + 1) + 1,
+        row * (CELL_SIZE + 1) + 1,
+        CELL_SIZE,
+        CELL_SIZE
+      );
+    }
+  }
+  ctx.stroke();
+}
+
 export default function Page() {
   const wasm = useWASM();
 
@@ -121,18 +173,28 @@ export default function Page() {
   const [map, setMap] = useState<string | null>(null);
   const onLevelChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
+      setMap(null);
       const level = event.target.value;
       if (level === "") {
         return;
       }
 
-      fetch(`/courses/lambdaman/lambdaman${level}`)
-        .then((response) => response.text())
-        .then(setMap)
-        .catch(console.error);
+      (async () => {
+        try {
+          const res = await fetch(`/courses/lambdaman/lambdaman${level}`);
+          const text = await res.text();
+          setMap(text);
+          renderMapToCanvas(text, canvasRef.current!);
+        } catch (e) {
+          console.error(e);
+          setError(e instanceof Error ? e.message : String(e));
+        }
+      })();
     },
     []
   );
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   return (
     <>
@@ -189,7 +251,7 @@ export default function Page() {
         )}
 
         <div>
-          <p>{map}</p>
+          <canvas style={{ width: "100%" }} ref={canvasRef} />
         </div>
       </section>
     </>

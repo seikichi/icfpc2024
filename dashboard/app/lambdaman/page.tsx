@@ -218,6 +218,7 @@ export default function Page() {
   const [expression, setExpression] = useState<string>("");
   const [value, setValue] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [level, setLevel] = useState("");
   const [map, setMap] = useState<string | null>(null);
 
   const formAction = useCallback(
@@ -250,6 +251,7 @@ export default function Page() {
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       setMap(null);
       const level = event.target.value;
+      setLevel(level);
       if (level === "") {
         return;
       }
@@ -270,6 +272,23 @@ export default function Page() {
   );
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const reload = useCallback(() => {
+    setMap(null);
+    if (level === "") {
+      return;
+    }
+    (async () => {
+      try {
+        const res = await fetch(`/courses/lambdaman/lambdaman${level}`);
+        const text = await res.text();
+        setMap(text);
+        renderMapToCanvas(text, canvasRef.current!);
+      } catch (e) {
+        console.error(e);
+        setError(e instanceof Error ? e.message : String(e));
+      }
+    })();
+  }, [level]);
 
   return (
     <>
@@ -280,6 +299,7 @@ export default function Page() {
           name="level"
           id="level"
           style={{ width: "100%" }}
+          value={level}
           onChange={onLevelChange}
         >
           <option value="">--Please choose an level--</option>
@@ -291,6 +311,10 @@ export default function Page() {
               </option>
             ))}
         </select>
+
+        <button onClick={reload} style={{ width: "100%", marginTop: "6px" }}>
+          Reload
+        </button>
       </section>
 
       <section>

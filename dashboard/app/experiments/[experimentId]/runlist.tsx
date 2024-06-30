@@ -8,7 +8,7 @@ type Props = {
 };
 
 export default function RunList({ experiment }: Props) {
-  const onDownload = async (runId: number) => {
+  const onDownload = async (course: string, level: number, runId: number) => {
     try {
       const res = await generateSolutionUrl(runId);
       if (!res.ok) {
@@ -16,14 +16,17 @@ export default function RunList({ experiment }: Props) {
       }
 
       const link = document.createElement("a");
-      try {
-        link.href = res.value;
-        link.setAttribute("target", "_blank");
-        document.body.appendChild(link);
-        link.click();
-      } finally {
-        link.parentNode?.removeChild(link);
-      }
+      const blob = await fetch(res.value).then((r) => r.blob());
+      const href = URL.createObjectURL(blob);
+      link.href = href;
+      link.download = `${course}${level}-${runId}.txt`;
+      link.click();
+
+      // Need to delay revoking ...?
+      (async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        URL.revokeObjectURL(href);
+      })();
     } catch (e) {
       console.error(e);
     }
@@ -55,7 +58,11 @@ export default function RunList({ experiment }: Props) {
             <td>{run.error && String(run.error)}</td>
             <td>
               {run.score && (
-                <button onClick={() => onDownload(run.id)}>Download</button>
+                <button
+                  onClick={() => onDownload(run.course, run.level, run.id)}
+                >
+                  Download
+                </button>
               )}
             </td>
           </tr>

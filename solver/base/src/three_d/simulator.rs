@@ -80,13 +80,23 @@ impl Simulator {
                         }
                     }
                     Cell::NotEqual => {
-                        if let Cell::Integer(x) = left_cell {
-                            if let Cell::Integer(y) = up_cell {
-                                if x != y {
+                        if let Cell::Integer(a) = left_cell {
+                            if let Cell::Integer(b) = up_cell {
+                                if a != b {
                                     remove_cells.insert((x as i64 - 1, y as i64));
                                     remove_cells.insert((x as i64, y as i64 - 1));
-                                    check_and_insert(x as i64 + 1, y, up_cell, &mut add_cells);
-                                    check_and_insert(x as i64, y + 1, left_cell, &mut add_cells);
+                                    check_and_insert(
+                                        x as i64 + 1,
+                                        y as i64,
+                                        up_cell,
+                                        &mut add_cells,
+                                    );
+                                    check_and_insert(
+                                        x as i64,
+                                        y as i64 + 1,
+                                        left_cell,
+                                        &mut add_cells,
+                                    );
                                 }
                             }
                         }

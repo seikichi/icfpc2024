@@ -151,10 +151,12 @@ function packInt(course: string, level: number, solution: string) {
     packInt = packInt * BigInt(4) + BigInt(mapping[c]);
   }
 
-  const prefix = encodeString(`solve ${course}${level} `);
-  const code = `B. ${prefix} ${body} ${encodeInt(packInt)}`;
+  // const prefix = encodeString(`solve ${course}${level} `);
+  // const code = `B. ${prefix} ${body} ${encodeInt(packInt)}`;
   // console.log({ encodeInt: code });
-  return code;
+  const code = encodeInt(packInt);
+  const prefix = encodeString(`solve ${course}${level} `);
+  return `B$ B$ L! B$ v! v! L" L# ? B= v# I" ${prefix} B. B$ B$ v" v" B/ v# I% BT I" BD B% v# I% SFL>O ${code}`;
 }
 
 function rlpack(course: string, level: number, solution: string) {

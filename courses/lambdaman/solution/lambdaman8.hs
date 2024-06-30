@@ -7,5 +7,5 @@
   let f = \s -> s . s . s in
   -- sを243回繰り返す
   let g = \s -> f (f (f (f (f s)))) in
-  g (g "D" . g "L" . g "U" . g "R")
+  g (g "DL" . g "UR")
 )

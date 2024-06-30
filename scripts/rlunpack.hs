@@ -2,19 +2,18 @@
 -- dir: 2bit (LRDU)
 -- len: 6bit
 
--- Yコンビネータ
--- Y = λf . (λx . f (x x)) (λx . f (x x))
-let Y = \f -> (\x -> f (x x)) (\x -> f (x x)) in
-
 (
-  Y (\self -> \code ->
+  (\f -> f f) (\self -> \code ->
     if code == 0 then
-      ""
+      "solve lambdaman4 "
     else
-      (self (code / 256)) . (
-        (\s -> Y (\self -> \n -> if n == 0 then "" else (self (n - 1)) . s)) -- repeat(s, n)
-        (1 T ((code % 4) D "LRDU")) -- LRDU
-        ((code / 4) % 64) -- run length
+      (self self (code / 256)) . (
+        -- repeat(s, n)
+        (\s -> (\f -> f f) (\self -> \n -> if n == 0 then "" else (self self (n - 1)) . s))
+        -- LRDU
+        (1 T ((code % 4) D "LRDU"))
+        -- run length
+        ((code / 4) % 64)
       )
   )
 )

@@ -58,14 +58,31 @@ def encode_int(n)
     "I" + ret.reverse
 end
 
-def decoder(n)
+def encode_string(input)
+    table = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`|~ \n"
+    rtable = {}
+
+    table.chars.each_with_index do |c, i|
+        rtable[c] = i
+    end
+
+    ret = "S"
+    for c in input.chars
+        ret += (rtable[c].ord + 33).chr
+    end
+    ret
+end
+
+def decoder(n, problem)
     code = encode_int(n)
-    %|B$ L! B$ B$ v! L$ L% ? B= v% I! S B. B$ v$ B/ v% I#e B$ B$ L& B$ v! L$ L' ? B= v' I! S B. B$ v$ B- v' I" v& BT I" BD B% v% I% SFL>O B% B/ v% I% Ia #{code} L" B$ L# B$ v" B$ v# v# L# B$ v" B$ v# v#|
+    prefix = encode_string("solve #{problem} ")
+    %|B$ B$ L! B$ v! v! L" L# ? B= v# I! #{prefix} B. B$ B$ v" v" B/ v# I#e B$ B$ L$ B$ L! B$ v! v! L" L% ? B= v% I! S B. B$ B$ v" v" B- v% I" v$ BT I" BD B% v# I% SFL>O B% B/ v# I% Ia #{code}|
 end
 
 N_LENGTH_BITS = 6
+problem = ARGV[0]
 input = $stdin.read.strip
 runs = run_length(input)
 runs = split_too_large_runs(runs, N_LENGTH_BITS)
 encoded = runs_to_int(runs, N_LENGTH_BITS)
-puts decoder(encoded)
+puts decoder(encoded, problem)

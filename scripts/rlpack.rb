@@ -60,7 +60,7 @@ end
 
 def decoder(n)
     code = encode_int(n)
-    %|B$ L! B$ L$ B$ B$ v! L& L( ? B= v( I! S B$ L) B$ L* B. B$ v& B/ v( I#e B$ B$ v$ v) v* B% B/ v( I% Ia BT I" BD B% v( I% SFL>O #{code} L% B$ v! L& L' ? B= v' I! S B. B$ v& B- v' I" v% L" B$ L# B$ v" B$ v# v# L# B$ v" B$ v# v#|
+    %|B$ L! B$ B$ v! L$ L% ? B= v% I! S B. B$ v$ B/ v% I#e B$ B$ L& B$ v! L$ L' ? B= v' I! S B. B$ v$ B- v' I" v& BT I" BD B% v% I% SFL>O B% B/ v% I% Ia #{code} L" B$ L# B$ v" B$ v# v# L# B$ v" B$ v# v#|
 end
 
 N_LENGTH_BITS = 6

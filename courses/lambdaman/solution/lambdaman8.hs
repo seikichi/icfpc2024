@@ -4,10 +4,10 @@
 
 -- Yコンビネータ
 -- Y = λf . (λx . f (x x)) (λx . f (x x))
-let Y = \f -> (\x -> f (x x)) (\x -> f (x x)) in
+let Y = \f -> f f in
 
 -- repeat(s, n)
-let repeat = \s -> Y (\self -> \n -> if n == 0 then "" else (self (n - 1)) . s) in
+let repeat = \s -> Y (\self -> \n -> if n == 0 then "" else (self self (n - 1)) . s) in
 
 "solve lambdaman8 " .
 (
@@ -18,6 +18,6 @@ let repeat = \s -> Y (\self -> \n -> if n == 0 then "" else (self (n - 1)) . s) 
       (repeat
         (1 T ((i % 4) D "DLUR"))
         (i / 2 * 2 + 2)
-      ) . (self (i + 1))
+      ) . (self self (i + 1))
   )
 ) 0

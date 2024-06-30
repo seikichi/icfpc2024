@@ -55,7 +55,7 @@ def main
         history = state.history
 
         puts(
-            "History: #{history}\n" +
+            "[#{history.size}] #{history}\n" +
             "#{stage_to_string(stage, lambda_y, lambda_x)}" +
             "[hjkl][u][q]: "
         )

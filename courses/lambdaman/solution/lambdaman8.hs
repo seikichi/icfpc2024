@@ -15,8 +15,9 @@ let repeat = \s -> Y (\self -> \n -> if n == 0 then "" else (self (n - 1)) . s) 
     if i == 97 then
       repeat "L" 97
     else
-      let dir = 1 T ((i % 4) D "DLUR") in
-      let streak = i / 2 * 2 + 2 in
-      (repeat dir streak) . (self (i + 1))
+      (repeat
+        (1 T ((i % 4) D "DLUR"))
+        (i / 2 * 2 + 2)
+      ) . (self (i + 1))
   )
 ) 0

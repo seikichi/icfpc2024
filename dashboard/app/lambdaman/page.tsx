@@ -94,11 +94,13 @@ export default function Page() {
 
   const [expression, setExpression] = useState<string>("");
   const [value, setValue] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
 
   const formAction = useCallback(
     async (formData: FormData) => {
       setExpression("");
       setValue("");
+      setError(null);
 
       try {
         const code = z.string().parse(formData.get("code"));
@@ -110,6 +112,7 @@ export default function Page() {
         setValue(value);
       } catch (e) {
         console.error(e);
+        setError(e instanceof Error ? e.message : String(e));
       }
     },
     [wasm]
@@ -144,6 +147,12 @@ export default function Page() {
         <div>
           <code style={{ backgroundColor: "lightgray" }}>{value}</code>
         </div>
+
+        {error && (
+          <div>
+            <code style={{ backgroundColor: "pink" }}>{error}</code>
+          </div>
+        )}
 
         <div>
           <canvas />

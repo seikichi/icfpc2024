@@ -1,5 +1,5 @@
 -- R を 199 回出力
 "solve lambdaman6 " . (
-  let dbl = \s -> s . s in
-  57 D (dbl (dbl (dbl (dbl (dbl "RRRRRRRR")))))
+  let f = \s -> s . s . s in
+  44 D (f (f (f (f "RRR"))))
 )

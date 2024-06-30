@@ -43,6 +43,7 @@ COPY solver/Cargo.lock solver/Cargo.toml ./
 COPY solver/eval/ eval/
 COPY solver/base/ base/
 COPY solver/wasm/ wasm/
+COPY solver/dsl/ dsl/
 COPY solver/lambdaman/ lambdaman/
 COPY solver/spaceship/ spaceship/
 

@@ -28,14 +28,24 @@ pub fn load_from_file<P: AsRef<Path>>(path: P) -> io::Result<ThreeDInput> {
 pub fn load_from_str(s: &str) -> io::Result<ThreeDInput> {
     let mut field: Vec<Vec<String>> = vec![];
     let lines: Vec<_> = s.trim().lines().collect::<Vec<_>>();
+    let mut first_solve = true;
     for line in lines.iter() {
         if line.starts_with("solve") {
-            continue;
+            if first_solve {
+                first_solve = false;
+                continue;
+            } else {
+                // 2回目のsolveが出たら止める
+                break;
+            }
         }
         let l = line
             .split_whitespace()
             .map(|s| s.to_string())
             .collect::<Vec<String>>();
+        if l.len() == 0 {
+            continue;
+        }
         field.push(l);
     }
     Ok(ThreeDInput::new(field))

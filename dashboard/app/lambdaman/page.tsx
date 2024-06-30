@@ -1,5 +1,7 @@
 "use client";
 
+const NUM_LEVELS = 21;
+
 import { SubmitButton } from "@/components/submit";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { WorkerRequest, WorkerResponse } from "./utils";
@@ -116,9 +118,43 @@ export default function Page() {
     [wasm]
   );
 
+  const [map, setMap] = useState<string | null>(null);
+  const onLevelChange = useCallback(
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      const level = event.target.value;
+      if (level === "") {
+        return;
+      }
+
+      fetch(`/courses/lambdaman/lambdaman${level}`)
+        .then((response) => response.text())
+        .then(setMap)
+        .catch(console.error);
+    },
+    []
+  );
+
   return (
     <>
       <h1>Lambdaman</h1>
+
+      <section>
+        <select
+          name="level"
+          id="level"
+          style={{ width: "100%" }}
+          onChange={onLevelChange}
+        >
+          <option value="">--Please choose an level--</option>
+          {Array(NUM_LEVELS)
+            .fill(0)
+            .map((_, key) => (
+              <option key={key} value={`${key + 1}`}>
+                lambdaman{key + 1}
+              </option>
+            ))}
+        </select>
+      </section>
 
       <section>
         <h2>DSL</h2>
@@ -153,7 +189,7 @@ export default function Page() {
         )}
 
         <div>
-          <canvas />
+          <p>{map}</p>
         </div>
       </section>
     </>

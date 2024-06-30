@@ -221,7 +221,8 @@ function rlpack(course: string, level: number, solution: string) {
 
   function decoder(n: bigint): string {
     const code = encodeInt(n);
-    return `B$ L! B$ L$ B$ B$ v! L& L( ? B= v( I! S B$ L) B$ L* B. B$ v& B/ v( I#e B$ B$ v$ v) v* B% B/ v( I% Ia BT I" BD B% v( I% SFL>O ${code} L% B$ v! L& L' ? B= v' I! S B. B$ v& B- v' I" v% L" B$ L# B$ v" B$ v# v# L# B$ v" B$ v# v#`;
+    // return `B$ L! B$ L$ B$ B$ v! L& L( ? B= v( I! S B$ L) B$ L* B. B$ v& B/ v( I#e B$ B$ v$ v) v* B% B/ v( I% Ia BT I" BD B% v( I% SFL>O ${code} L% B$ v! L& L' ? B= v' I! S B. B$ v& B- v' I" v% L" B$ L# B$ v" B$ v# v# L# B$ v" B$ v# v#`;
+    return `B$ L! B$ B$ v! L$ L% ? B= v% I! S B. B$ v$ B/ v% I#e B$ B$ L& B$ v! L$ L' ? B= v' I! S B. B$ v$ B- v' I" v& BT I" BD B% v% I% SFL>O B% B/ v% I% Ia ${code} L" B$ L# B$ v" B$ v# v# L# B$ v" B$ v# v#`;
   }
 
   const N_LENGTH_BITS = 6;

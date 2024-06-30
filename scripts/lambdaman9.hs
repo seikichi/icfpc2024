@@ -1,6 +1,6 @@
 "solve lambdaman9 " . (
   (
-    (\f -> (\x -> f (x x)) (\x -> f (x x))) (\self -> \count ->
+    (\f -> f f) (\self -> \count ->
       if count == 2500 then
         ""
       else
@@ -12,11 +12,11 @@
               "L"
             else
               "R"
-        ) . (self (count + 1))
+        ) . (self self (count + 1))
     )
   )
   1
 )
 
--- B. S3/,6%},!-"$!-!.^} B$ B$ L" B$ L# B$ v" B$ v# v# L# B$ v" B$ v# v# L$ L% ? B= v% I;Y S B. ? B= B% v% IS I! S> ? B= B% B/ v% IS I# I" SF SL B$ v$ B+ v% I" I"
--- NOTE: Your score: 159. Best score: 110.
+-- B. S3/,6%},!-"$!-!.^} B$ B$ L" B$ v" v" L$ L% ? B= v% I;Y S B. ? B= B% v% IS I! S> ? B= B% B/ v% IS I# I" SF SL B$ B$ v$ v$ B+ v% I" I"
+-- NOTE: Your score: 135. Best score: 110.

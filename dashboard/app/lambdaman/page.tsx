@@ -103,13 +103,12 @@ function renderMapToCanvas(map: string, canvas: HTMLCanvasElement) {
     .trim()
     .split("\n")
     .map((line) => Array.from(line));
+
   const height = cells.length;
   const width = cells[0].length;
 
   canvas.height = (CELL_SIZE + 1) * height + 1;
   canvas.width = (CELL_SIZE + 1) * width + 1;
-
-  console.log("HELLO");
 
   const ctx = canvas.getContext("2d")!;
 
@@ -136,7 +135,7 @@ function renderMapToCanvas(map: string, canvas: HTMLCanvasElement) {
       const cell = cells[row][col] as Cell;
 
       ctx.fillStyle =
-        cell === " "
+        cell === "_"
           ? EMPTY_COLOR
           : cell === "#"
             ? WALL_COLOR
@@ -155,8 +154,63 @@ function renderMapToCanvas(map: string, canvas: HTMLCanvasElement) {
   ctx.stroke();
 }
 
+function applySolution(map: string, solution: string): string {
+  const cells = map
+    .trim()
+    .split("\n")
+    .map((line) => Array.from(line));
+
+  // find lambda cell (L)
+  let lambdaRow = -1;
+  let lambdaCol = -1;
+  for (let row = 0; row < cells.length; row++) {
+    for (let col = 0; col < cells[row].length; col++) {
+      if (cells[row][col] === "L") {
+        lambdaRow = row;
+        lambdaCol = col;
+        break;
+      }
+    }
+  }
+
+  if (lambdaRow === -1 || lambdaCol === -1) {
+    throw "Failed to find Lambda";
+  }
+
+  // NOTE: moves is "R", "L", "U", "D" list
+  const moves = solution.split(" ")[2];
+
+  for (const move of moves) {
+    const newRow = lambdaRow + (move === "D" ? 1 : move === "U" ? -1 : 0);
+    const newCol = lambdaCol + (move === "R" ? 1 : move === "L" ? -1 : 0);
+
+    // if out of map, do not move
+    if (
+      newRow < 0 ||
+      newRow >= cells.length ||
+      newCol < 0 ||
+      newCol >= cells[0].length
+    ) {
+      continue;
+    }
+    // if wall, do not move
+    if (cells[newRow][newCol] === "#") {
+      continue;
+    }
+
+    cells[lambdaRow][lambdaCol] = "_";
+    cells[newRow][newCol] = "L";
+    lambdaRow = newRow;
+    lambdaCol = newCol;
+  }
+
+  // create newMap from cells
+  const newMap = cells.map((line) => line.join("")).join("\n");
+  return newMap;
+}
+
 // pill, lambda, wall, empty
-type Cell = "." | "L" | "#" | " ";
+type Cell = "." | "L" | "#" | "_";
 
 export default function Page() {
   const wasm = useWASM();
@@ -164,6 +218,7 @@ export default function Page() {
   const [expression, setExpression] = useState<string>("");
   const [value, setValue] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [map, setMap] = useState<string | null>(null);
 
   const formAction = useCallback(
     async (formData: FormData) => {
@@ -177,15 +232,20 @@ export default function Page() {
         setExpression(expression);
         const value = await wasm.eval(expression);
         setValue(value);
+
+        if (map === null) {
+          return;
+        }
+
+        renderMapToCanvas(applySolution(map, value), canvasRef.current!);
       } catch (e) {
         console.error(e);
         setError(e instanceof Error ? e.message : String(e));
       }
     },
-    [wasm]
+    [wasm, map]
   );
 
-  const [map, setMap] = useState<string | null>(null);
   const onLevelChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       setMap(null);

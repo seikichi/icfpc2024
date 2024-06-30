@@ -104,9 +104,7 @@ export default function Page() {
 
       try {
         const code = z.string().parse(formData.get("code"));
-        console.log({ code });
         const expression = await wasm.transpile(code);
-        console.log({ expression });
         setExpression(expression);
         const value = await wasm.eval(expression);
         setValue(value);

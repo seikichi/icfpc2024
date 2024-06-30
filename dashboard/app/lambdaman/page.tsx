@@ -5,8 +5,13 @@ const NUM_LEVELS = 21;
 import { SubmitButton } from "@/components/submit";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { WorkerRequest, WorkerResponse } from "./utils";
-import { Result } from "@/lib/result";
 import { z } from "zod";
+
+import AceEditor from "react-ace";
+
+import "ace-builds/src-noconflict/mode-haskell";
+import "ace-builds/src-noconflict/theme-github";
+import "ace-builds/src-noconflict/ext-language_tools";
 
 const DEFAULT_CODE = `\
 "solve lambdaman9 " . (
@@ -220,32 +225,34 @@ export default function Page() {
   const [error, setError] = useState<string | null>(null);
   const [level, setLevel] = useState("");
   const [map, setMap] = useState<string | null>(null);
+  const [code, setCode] = useState("");
 
-  const formAction = useCallback(
-    async (formData: FormData) => {
-      setExpression("");
-      setValue("");
-      setError(null);
+  const onEditorChange = useCallback((code: string) => {
+    setCode(code);
+  }, []);
 
-      try {
-        const code = z.string().parse(formData.get("code"));
-        const expression = await wasm.transpile(code);
-        setExpression(expression);
-        const value = await wasm.eval(expression);
-        setValue(value);
+  const formAction = useCallback(async () => {
+    setExpression("");
+    setValue("");
+    setError(null);
 
-        if (map === null) {
-          return;
-        }
+    try {
+      // const code = z.string().parse(formData.get("code"));
+      const expression = await wasm.transpile(code);
+      setExpression(expression);
+      const value = await wasm.eval(expression);
+      setValue(value);
 
-        renderMapToCanvas(applySolution(map, value), canvasRef.current!);
-      } catch (e) {
-        console.error(e);
-        setError(e instanceof Error ? e.message : String(e));
+      if (map === null) {
+        return;
       }
-    },
-    [wasm, map]
-  );
+
+      renderMapToCanvas(applySolution(map, value), canvasRef.current!);
+    } catch (e) {
+      console.error(e);
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }, [wasm, map, code]);
 
   const onLevelChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -321,13 +328,17 @@ export default function Page() {
         <h2>DSL</h2>
         <form action={formAction}>
           <div>
-            <label htmlFor="code">code</label>
-            <textarea
-              id="code"
+            <AceEditor
+              mode="haskell"
+              theme="github"
               name="code"
+              value={code}
               defaultValue={DEFAULT_CODE}
               style={{ width: "100%", boxSizing: "border-box" }}
-            ></textarea>
+              editorProps={{ $blockScrolling: true }}
+              onChange={onEditorChange}
+              height="160px"
+            />
           </div>
 
           <div>

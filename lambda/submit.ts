@@ -127,6 +127,37 @@ function compress(str: string) {
   return `${code} ${compressed}`;
 }
 
+function packInt(course: string, level: number, solution: string) {
+  const prefix = encodeString(`solve ${course}${level} `);
+
+  // packint
+  const body =
+    'BD I" B$ B$ L! B$ L" B$ v! B$ v" v" L" B$ v! B$ v" v" L# L$ ? B= v$ I! S B. B$ v# B/ v$ I% BT I" BD B% v$ I% SFL>O';
+
+  function encodeInt(n: bigint) {
+    if (n === BigInt(0)) {
+      return "I!";
+    }
+    let ret: string[] = [];
+    while (n > BigInt(0)) {
+      ret.push(String.fromCharCode(Number((n % BigInt(94)) + BigInt(33))));
+      n /= BigInt(94);
+    }
+    ret.reverse();
+    return "I" + ret.join("");
+  }
+
+  let packInt = BigInt(1);
+  const mapping: { [key: string]: number } = { L: 0, R: 1, D: 2, U: 3 };
+  for (const c of solution) {
+    packInt = packInt * BigInt(4) + BigInt(mapping[c]);
+  }
+
+  const code = `B. ${prefix} ${body} ${encodeInt(packInt)}`;
+  console.log({ encodeInt: code });
+  return code;
+}
+
 (async () => {
   const courses = { lambdaman: 21, spaceship: 25 };
   // const courses = { spaceship: 25 };
@@ -162,16 +193,21 @@ function compress(str: string) {
         }
 
         const solution = await obj.Body.transformToString();
+        console.log({ solution });
+
         const res = await client.send(`solve ${course}${i} ${solution}`);
         console.log(res);
         await new Promise((r) => setTimeout(r, 3000));
 
         if (course === "lambdaman") {
-          const solution = await obj.Body.transformToString();
-          const res = await client.sendRaw(
-            compress(`solve ${course}${i} ${solution}`)
+          console.log("run length encoding...");
+          console.log(
+            await client.sendRaw(compress(`solve ${course}${i} ${solution}`))
           );
-          console.log(res);
+          await new Promise((r) => setTimeout(r, 3000));
+
+          console.log("int pack...");
+          console.log(await client.sendRaw(packInt(course, i, solution)));
           await new Promise((r) => setTimeout(r, 3000));
         }
       } catch (e) {

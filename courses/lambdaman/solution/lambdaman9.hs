@@ -1,22 +1,7 @@
 "solve lambdaman9 " . (
-  (
-    (\f -> f f) (\self -> \count ->
-      if count == 2500 then
-        ""
-      else
-        (
-          if (count % 50) == 0 then
-            "D"
-          else
-            if (((count / 50) % 2) == 1) then
-              "L"
-            else
-              "R"
-        ) . (self self (count + 1))
-    )
-  )
-  1
+  -- sを3回繰り返す
+  let f = \s -> s . s . s in
+  -- sを81回繰り返す
+  let g = \s -> f (f (f (f s))) in
+  g (g "R" . g "L" . "D")
 )
-
--- B. S3/,6%},!-"$!-!.^} B$ B$ L" B$ v" v" L$ L% ? B= v% I;Y S B. ? B= B% v% IS I! S> ? B= B% B/ v% IS I# I" SF SL B$ B$ v$ v$ B+ v% I" I"
--- NOTE: Your score: 135. Best score: 110.

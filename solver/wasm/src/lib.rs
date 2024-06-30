@@ -1,3 +1,4 @@
+use base::dsl;
 use base::eval;
 use std::rc::Rc;
 
@@ -19,4 +20,9 @@ pub fn eval_str(input: &str) -> Result<String, String> {
     let frame = eval::Frame::new();
     let value = eval::eval(Rc::new(frame), &ast).map_err(|e| e.to_string())?;
     Ok(format!("{}", value))
+}
+
+#[wasm_bindgen]
+pub fn transpile(input: &str) -> Result<String, String> {
+    Ok(dsl::transpile(input, true).map_err(|e| e.to_string())?)
 }

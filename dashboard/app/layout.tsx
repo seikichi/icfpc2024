@@ -38,6 +38,9 @@ export default function RootLayout({
             <li>
               <a href="/icfp">ICFP Language</a>
             </li>
+            <li>
+              <a href="/dsl">DSL</a>
+            </li>
           </ul>
         </nav>
         <main>{children}</main>

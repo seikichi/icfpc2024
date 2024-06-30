@@ -46,10 +46,26 @@ def runs_to_int(runs, n_length_bits)
     ret
 end
 
+def encode_int(n)
+    if n == 0
+        return "I!"
+    end
+    ret = ""
+    while n > 0
+        ret += (n % 94 + 33).chr
+        n /= 94
+    end
+    "I" + ret.reverse
+end
+
+def decoder(n)
+    code = encode_int(n)
+    %|B$ L! B$ L$ B$ B$ v! L& L( ? B= v( I! S B$ L) B$ L* B. B$ v& B/ v( I#e B$ B$ v$ v) v* B% B/ v( I% Ia BT I" BD B% v( I% SFL>O #{code} L% B$ v! L& L' ? B= v' I! S B. B$ v& B- v' I" v% L" B$ L# B$ v" B$ v# v# L# B$ v" B$ v# v#|
+end
+
 N_LENGTH_BITS = 6
 input = $stdin.read.strip
 runs = run_length(input)
 runs = split_too_large_runs(runs, N_LENGTH_BITS)
-p runs
 encoded = runs_to_int(runs, N_LENGTH_BITS)
-p encoded
+puts decoder(encoded)

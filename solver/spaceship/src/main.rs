@@ -41,6 +41,10 @@ struct Opt {
 
     #[structopt(long = "annealing-initial-temperature", default_value = "1000.0")]
     annealing_initial_temperature: f64,
+
+    #[structopt(long = "staronly-allowed-miss", default_value = "0")]
+    staronly_allowed_miss: usize,
+
     // #[structopt(short = "p", default_value = "500.0", help = "prune threshold")]
     // prune_threshold: f32,
     // #[structopt(long = "annealing-swap-ratio", default_value = "30.0")]
@@ -92,6 +96,12 @@ fn parse_ai_string(
         //     path: opt.load_path.clone(),
         // }),
         "Simple" => Box::new(ai::SimpleHeadAI {}),
+        "StarOnly" => Box::new(ai::StarOnlyAI {
+            allowed_miss: opt.staronly_allowed_miss,
+        }),
+        "StarOnlySparse" => Box::new(ai::StarOnlySparseAI {
+            allowed_miss: opt.staronly_allowed_miss,
+        }),
         x => bail!("'{x}' is not a HeadAI"),
     };
     let mut chained_ais = vec![];

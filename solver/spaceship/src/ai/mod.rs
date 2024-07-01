@@ -1,9 +1,13 @@
 mod annealing;
 mod common;
 mod simple;
+mod staronly;
+mod staronly_sparse;
 
 pub use annealing::*;
 pub use simple::*;
+pub use staronly::*;
+pub use staronly_sparse::*;
 
 use crate::spaceship_input;
 use crate::spaceship_solution::SpaceshipSolution;

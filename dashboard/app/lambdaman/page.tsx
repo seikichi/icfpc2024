@@ -183,6 +183,9 @@ function applySolution(map: string, solution: string): string {
   }
 
   // NOTE: moves is "R", "L", "U", "D" list
+  if (solution.split(" ").length !== 3) {
+    throw "Expect `solve lambdaman1 ...` but got wrong format of solution";
+  }
   const moves = solution.split(" ")[2];
 
   for (const move of moves) {

@@ -19,7 +19,8 @@ impl HeadAI for AStarOnlyAI {
     fn solve(&mut self, input: &SpaceshipInput) -> SpaceshipSolution {
         let (stars, n_stars) = make_field(input);
         let n_stars_left = if stars.contains(&V2::ZERO) {
-            n_stars - 1
+            // n_stars - 1
+            n_stars
         } else {
             n_stars
         };
@@ -77,6 +78,7 @@ struct State {
     miss: i64,
     visit: im_rc::HashSet<V2>,
     moves: Vec<char>,
+    prev: V2,
 }
 
 impl State {
@@ -126,6 +128,9 @@ fn approx1d(px: i64, mut vx: i64, starx: i64) -> i64 {
         cnt += -vx;
         vx = 0;
     }
+    if vx + 1 > dx {
+        return 2;
+    }
     // 1: v+1
     // 2: 2v+(1+2)
     // 3: 3v+(1+2+3)
@@ -169,8 +174,11 @@ fn astar(
     max_diff_star: usize,
     n_stars_left: i64,
 ) -> Option<Vec<char>> {
+    // let mut open = HashSet::new();
     info!("star_left: {}", n_stars_left);
     let mut queue: BinaryHeap<State> = BinaryHeap::new();
+    // let mut visit = im_rc::HashSet::new();
+    // visit.insert(V2::ZERO);
     queue.push(State {
         f: 0,
         g: 0,
@@ -179,22 +187,32 @@ fn astar(
         miss: 0,
         visit: im_rc::HashSet::new(),
         moves: vec![],
+        prev: V2::ZERO,
     });
 
     let mut max_visit_star = 0;
-    // let mut iter = 0;
+    let mut iter = 0;
     while let Some(state) = queue.pop() {
-        // iter += 1;
-        if n_stars_left + state.miss == state.visit.len() as i64 {
+        iter += 1;
+        if n_stars_left == state.visit_star() as i64 {
             // クリア
             return Some(state.moves);
         }
+        // let u = (state.p, state.v, state.visit.clone());
+        // if open.contains(&u) {
+        //     continue;
+        // }
+        // open.insert(u);
         if max_visit_star - state.visit_star() > max_diff_star as i64 {
             continue;
         }
-        // if iter % 1000 == 0 {
-        //     info!("{:?}", state);
-        // }
+        if iter % 1000000 == 0 {
+            info!(
+                "{:?} {}",
+                state,
+                String::from_iter(state.moves.clone().iter())
+            );
+        }
         if state.visit_star() > max_visit_star {
             max_visit_star = state.visit_star();
             info!(
@@ -208,6 +226,16 @@ fn astar(
             // if state.f > 5 {
             //     info!("{:?} {:?}", state, queue);
             // }
+        }
+        let mut next = V2::ONE * 1000000;
+        for &s in stars.iter() {
+            if state.visit.contains(&s) {
+                continue;
+            }
+            let d = (s - state.prev).length_squared();
+            if d < (next - state.prev).length_squared() {
+                next = s;
+            }
         }
 
         // 状態(p, v)から遷移可能な状態をすべて探索する
@@ -225,7 +253,16 @@ fn astar(
                 if state.visit.contains(&np) {
                     continue;
                 }
+                let mut nprev = state.prev;
                 let nvisit = state.visit.update(np);
+                // let mut nvisit = state.visit.clone();
+                if stars.contains(&np) {
+                    if np != next {
+                        continue;
+                    }
+                    // nvisit.insert(np);
+                    nprev = np;
+                }
                 let mut nmoves = state.moves.clone();
                 nmoves.push(to_move(dx, dy));
                 let nvisit_star = nvisit.len() as i64 - nmiss;
@@ -238,6 +275,7 @@ fn astar(
                     miss: nmiss,
                     visit: nvisit,
                     moves: nmoves,
+                    prev: nprev,
                 });
             }
         }

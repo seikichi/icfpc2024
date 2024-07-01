@@ -39,11 +39,13 @@ RUN npm install && npm run prisma:generate && npm run build
 # # solvers
 # RUN touch ./wasm/src/lib.rs ./base/src/lib.rs ./lambdaman/src/main.rs ./spaceship/src/main.rs
 
+# members = ["base", "lambdaman", "spaceship", "three_d_simulation", "wasm", "eval", "dsl"]
 COPY solver/Cargo.lock solver/Cargo.toml ./
 COPY solver/eval/ eval/
 COPY solver/base/ base/
 COPY solver/wasm/ wasm/
 COPY solver/dsl/ dsl/
+COPY solver/three_d_simulation/ three_d_simulation/
 COPY solver/lambdaman/ lambdaman/
 COPY solver/spaceship/ spaceship/
 

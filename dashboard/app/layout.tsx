@@ -44,6 +44,9 @@ export default function RootLayout({
             <li>
               <a href="/lambdaman">Lambdaman</a>
             </li>
+            <li>
+              <a href="/spaceship">Spaceship</a>
+            </li>
           </ul>
         </nav>
         <main>{children}</main>

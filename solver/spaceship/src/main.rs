@@ -42,6 +42,9 @@ struct Opt {
     #[structopt(long = "annealing-initial-temperature", default_value = "1000.0")]
     annealing_initial_temperature: f64,
 
+    #[structopt(long = "nearest-allowed-miss", default_value = "0")]
+    nearest_allowed_miss: usize,
+
     #[structopt(long = "staronly-allowed-miss", default_value = "0")]
     staronly_allowed_miss: usize,
 
@@ -98,6 +101,9 @@ fn parse_ai_string(
         //     path: opt.load_path.clone(),
         // }),
         "Simple" => Box::new(ai::SimpleHeadAI {}),
+        "Nearest" => Box::new(ai::NearestAI {
+            allowed_miss: opt.nearest_allowed_miss,
+        }),
         "StarOnly" => Box::new(ai::StarOnlyAI {
             allowed_miss: opt.staronly_allowed_miss,
         }),

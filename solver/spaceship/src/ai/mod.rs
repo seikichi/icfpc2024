@@ -1,12 +1,14 @@
 mod annealing;
 mod common;
 mod simple;
+mod nearest;
 mod staronly;
 mod staronly_sparse;
 mod astaronly;
 
 pub use annealing::*;
 pub use simple::*;
+pub use nearest::*;
 pub use staronly::*;
 pub use staronly_sparse::*;
 pub use astaronly::*;

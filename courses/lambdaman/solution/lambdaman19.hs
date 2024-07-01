@@ -2,12 +2,6 @@
 -- Y = λf . (λx . f (x x)) (λx . f (x x))
 let Y = \f -> (\x -> f (x x)) (\x -> f (x x)) in
 
--- repeat s n: 文字列sをn回繰り返した文字列を返す
-let repeat = \s -> Y (\self -> \n -> if n == 0 then "" else (self (n - 1)) . s) in
-
--- 2^n
-let pow2 = Y (\self -> \n -> if n == 0 then 1 else 2 * self (n - 1)) in
-
 "solve lambdaman19 " . (
     let t_sq = Y(
         \self -> \order -> \a -> \b -> \c -> \d -> (
@@ -15,14 +9,22 @@ let pow2 = Y (\self -> \n -> if n == 0 then 1 else 2 * self (n - 1)) in
                 ""
             else
                 let next = self (order - 1) in (
-                    let len = pow2 order in
-                    (repeat a len) .
+                    let repeat2n =
+                        -- repeat
+                        (Y (\self -> \n -> \s -> if n == 0 then "" else (self (n - 1) s) . s))
+                        (
+                            -- pow2
+                            (Y (\self -> \n -> if n == 0 then 1 else 2 * self (n - 1)))
+                            order
+                        )
+                    in
+                    (repeat2n a) .
                     (next a b c d) .
-                    (repeat c len) . (repeat b len) .
+                    (repeat2n c) . (repeat2n b) .
                     (next b c d a) .
-                    (repeat d len) . (repeat d len) .
+                    (repeat2n d) . (repeat2n d) .
                     (next d a b c) .
-                    (repeat b len)
+                    (repeat2n b)
                 )
         )
     ) in

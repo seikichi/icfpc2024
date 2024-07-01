@@ -224,4 +224,8 @@ fn approx1d_test() {
     assert_eq!(c, 3);
     let c = approx1d(0, -2, 10);
     assert_eq!(c, 5);
+    let c = approx1d(10, 3, 20);
+    assert_eq!(c, 3);
+    let c = approx1d(-10, 3, -20);
+    assert_eq!(c, 5);
 }

@@ -3,13 +3,29 @@
 const NUM_LEVELS = 25;
 
 // import { SubmitButton } from "@/components/submit";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 // import { WorkerRequest, WorkerResponse } from "./utils";
 import { z } from "zod";
 
 type SquareList = [number, number][];
 
-function renderSquaresToCanvas(squares: SquareList, canvas: HTMLCanvasElement) {
+const vyvx: { [key: number]: [number, number] } = {
+  1: [-1, -1],
+  2: [-1, 0],
+  3: [-1, 1],
+  4: [0, -1],
+  5: [0, 0],
+  6: [0, 1],
+  7: [1, -1],
+  8: [1, 0],
+  9: [1, 1],
+} as const;
+
+function renderSquaresToCanvas(
+  squares: SquareList,
+  canvas: HTMLCanvasElement,
+  moves: number[]
+) {
   const GRID_COLOR = "#DDDDDD";
   const SQUARE_COLOR = "#0000ff";
   const LAMBDA_COLOR = "#d03e19";
@@ -83,6 +99,39 @@ function renderSquaresToCanvas(squares: SquareList, canvas: HTMLCanvasElement) {
     );
   }
   ctx.stroke();
+
+  if (moves.length === 0) {
+    return;
+  }
+
+  console.log({ moves });
+
+  // moves を塗る
+  ctx.beginPath();
+  ctx.strokeStyle = "red";
+  ctx.lineWidth = 2;
+  let x = 0,
+    y = 0,
+    vx = 0,
+    vy = 0;
+
+  for (const move of moves) {
+    const [dy, dx] = vyvx[move];
+    ctx.moveTo(
+      (x - minX) * (CELL_SIZE + 1) + CELL_SIZE / 2 + 1,
+      (y - minY) * (CELL_SIZE + 1) + CELL_SIZE / 2 + 1
+    );
+    vx += dx;
+    vy += dy;
+    x += vx;
+    y += vy;
+    ctx.lineTo(
+      (x - minX) * (CELL_SIZE + 1) + CELL_SIZE / 2 + 1,
+      (y - minY) * (CELL_SIZE + 1) + CELL_SIZE / 2 + 1
+    );
+    console.log({ x, y });
+  }
+  ctx.stroke();
 }
 
 export default function Page() {
@@ -118,7 +167,7 @@ export default function Page() {
                 .map((line) => line.split(" ").map((v) => Number(v)))
             );
           setSquares(squares);
-          renderSquaresToCanvas(squares, canvasRef.current!);
+          renderSquaresToCanvas(squares, canvasRef.current!, []);
         } catch (e) {
           console.error(e);
           setError(e instanceof Error ? e.message : String(e));
@@ -129,6 +178,34 @@ export default function Page() {
   );
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const onFileChange = useCallback(
+    async (event: ChangeEvent<HTMLInputElement>) => {
+      const files = event.currentTarget.files;
+      if (files?.length !== 1) {
+        return;
+      }
+      const file = files[0];
+
+      (async () => {
+        const reader = new FileReader();
+        reader.addEventListener("load", () => {
+          if (squares === null) {
+            return;
+          }
+          const moves = z
+            .string()
+            .parse(reader.result)
+            .trim()
+            .split("")
+            .map((c) => Number(c));
+          renderSquaresToCanvas(squares, canvasRef.current!, moves);
+        });
+        reader.readAsText(file);
+      })();
+    },
+    [squares]
+  );
 
   return (
     <>
@@ -152,6 +229,14 @@ export default function Page() {
               </option>
             ))}
         </select>
+
+        {squares !== null && (
+          <input
+            onChange={onFileChange}
+            style={{ width: "100%", marginTop: "4px" }}
+            type="file"
+          />
+        )}
       </section>
 
       <section>

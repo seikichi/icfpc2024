@@ -2,6 +2,7 @@ use std::collections::{BinaryHeap, HashSet};
 
 use glam::I64Vec2;
 use log::debug;
+use log::info;
 
 use crate::spaceship_input::SpaceshipInput;
 use crate::spaceship_solution::SpaceshipSolution;
@@ -23,7 +24,7 @@ impl HeadAI for AStarOnlyAI {
             n_stars
         };
         //print_field(&stars);
-        let best_moves = astar(&stars, self.allowed_miss, n_stars_left);
+        let best_moves = astar(&stars, self.allowed_miss, n_stars_left as i64);
         SpaceshipSolution {
             moves: best_moves.expect("AStarOnly: no solutions found"),
             order: vec![],
@@ -73,6 +74,12 @@ struct State {
     moves: Vec<char>,
 }
 
+impl State {
+    fn visit_star(&self) -> i64 {
+        self.visit.len() as i64 - self.miss
+    }
+}
+
 impl PartialOrd for State {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
@@ -81,14 +88,24 @@ impl PartialOrd for State {
 
 impl Ord for State {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        (-self.f, -self.miss, self.p.x, self.p.y, self.v.x, self.v.y).cmp(&(
-            -other.f,
-            -other.miss,
-            other.p.x,
-            other.p.y,
-            other.v.x,
-            other.v.y,
-        ))
+        (
+            -self.f,
+            self.visit_star(),
+            -self.miss,
+            self.p.x,
+            self.p.y,
+            self.v.x,
+            self.v.y,
+        )
+            .cmp(&(
+                -other.f,
+                other.visit_star(),
+                -other.miss,
+                other.p.x,
+                other.p.y,
+                other.v.x,
+                other.v.y,
+            ))
     }
 }
 
@@ -107,12 +124,12 @@ fn approx1d(px: i64, mut vx: i64, starx: i64) -> i64 {
     // 3: 3v+(1+2+3)
     // 4: 4v+(1+2+3+4)
     // ...
-    // n: nv+n(n-1)/2
-    // => nv + n(n-1)/2 >= dx
-    //    nv + n^2/2 - n/2
-    //    n^2/2 + (v-1/2)n - dx >= 0
+    // n: nv+n(n+1)/2
+    // => nv + n(n+1)/2 >= dx
+    //    nv + n^2/2 + n/2
+    //    n^2/2 + (v+1/2)n - dx >= 0
     let n = f64::ceil(
-        (f64::sqrt((4 * vx * vx - 4 * vx + 8 * dx + 1) as f64) - 2.0 * (vx as f64) + 1.0) * 0.5,
+        (f64::sqrt((4 * vx * vx + 4 * vx + 8 * dx + 1) as f64) - 2.0 * (vx as f64) - 1.0) * 0.5,
     ) as i64;
     return n;
 }
@@ -125,17 +142,18 @@ fn approx2d(p: V2, v: V2, star: V2) -> i64 {
 }
 
 // 与えられた点から任意の未到達の星に何手でたどり着けるか
-fn heuristic(stars: &HashSet<V2>, p: V2, v: V2, visit: &im_rc::HashSet<V2>) -> i64 {
+fn heuristic(stars: &HashSet<V2>, p: V2, v: V2, visit: &im_rc::HashSet<V2>, left_star: i64) -> i64 {
     let mut ret = 1 << 30;
     for star in stars {
         if !visit.contains(star) {
-            ret = std::cmp::max(ret, approx2d(p, v, *star));
+            ret = std::cmp::min(ret, approx2d(p, v, *star));
         }
     }
-    ret
+    ret + left_star
 }
 
-fn astar(stars: &HashSet<V2>, allowed_miss: usize, n_stars_left: usize) -> Option<Vec<char>> {
+fn astar(stars: &HashSet<V2>, allowed_miss: usize, n_stars_left: i64) -> Option<Vec<char>> {
+    info!("star_left: {}", n_stars_left);
     let mut queue: BinaryHeap<State> = BinaryHeap::new();
     queue.push(State {
         f: 0,
@@ -147,10 +165,20 @@ fn astar(stars: &HashSet<V2>, allowed_miss: usize, n_stars_left: usize) -> Optio
         moves: vec![],
     });
 
+    let mut max_visit_star = 0;
     while let Some(state) = queue.pop() {
-        if n_stars_left + state.miss as usize == state.visit.len() {
+        if n_stars_left + state.miss == state.visit.len() as i64 {
             // クリア
             return Some(state.moves);
+        }
+        if state.visit_star() > max_visit_star {
+            max_visit_star = state.visit_star();
+            info!(
+                "f: {} get: {} miss: {}",
+                state.f,
+                state.visit_star(),
+                state.miss
+            );
         }
 
         // 状態(p, v)から遷移可能な状態をすべてバックトラックで探索する
@@ -171,8 +199,10 @@ fn astar(stars: &HashSet<V2>, allowed_miss: usize, n_stars_left: usize) -> Optio
                 let nvisit = state.visit.update(np);
                 let mut nmoves = state.moves.clone();
                 nmoves.push(to_move(dx, dy));
+                let nvisit_star = nvisit.len() as i64 - nmiss;
+                let nleft_star = n_stars_left - nvisit_star;
                 queue.push(State {
-                    f: state.g + 1 + heuristic(stars, np, nv, &nvisit),
+                    f: state.g + 1 + heuristic(stars, np, nv, &nvisit, nleft_star),
                     g: state.g + 1,
                     p: np,
                     v: nv,
@@ -184,4 +214,14 @@ fn astar(stars: &HashSet<V2>, allowed_miss: usize, n_stars_left: usize) -> Optio
         }
     }
     None
+}
+
+#[test]
+fn approx1d_test() {
+    let c = approx1d(1, 0, 0);
+    assert_eq!(c, 1);
+    let c = approx1d(0, 3, 10);
+    assert_eq!(c, 3);
+    let c = approx1d(0, -2, 10);
+    assert_eq!(c, 5);
 }

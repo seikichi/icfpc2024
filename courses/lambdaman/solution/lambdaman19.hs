@@ -1,20 +1,18 @@
--- Yコンビネータ
--- Y = λf . (λx . f (x x)) (λx . f (x x))
-let Y = \f -> (\x -> f (x x)) (\x -> f (x x)) in
+let Y = \f -> f f in
 
 "solve lambdaman19 " . (
-    let t_sq = Y(
+    let t_sq = Y (
         \self -> \order -> \a -> \b -> \c -> \d -> (
             if order < 0 then
                 ""
             else
-                let next = self (order - 1) in (
+                let next = self self (order - 1) in (
                     let repeat2n =
                         -- repeat
-                        (Y (\self -> \n -> \s -> if n == 0 then "" else (self (n - 1) s) . s))
+                        (Y (\self -> \n -> \s -> if n == 0 then "" else (self self (n - 1) s) . s))
                         (
                             -- pow2
-                            (Y (\self -> \n -> if n == 0 then 1 else 2 * self (n - 1)))
+                            (Y (\self -> \n -> if n == 0 then 1 else 2 * self self (n - 1)))
                             order
                         )
                     in

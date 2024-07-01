@@ -4,7 +4,7 @@
   let rrR_DRRU = r (r "R" . "DRRU") in
   let rrL_ULLD = r (r "L" . "ULLD") in
   f (
-    r (rrR_DRRU . "LDR" . rrL_ULLD . "RDL")
-    . (rrR_DRRU . "DLDR" . rrL_ULLD . "RDLU")
+    r (rrR_DRRU . "LD" . rrL_ULLD . "RD")
+    . (rrR_DRRU . "DLD" . rrL_ULLD . "RDLU")
   )
 )

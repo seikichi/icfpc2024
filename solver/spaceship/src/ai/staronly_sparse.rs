@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use glam::I64Vec2;
 use log::debug;
 
@@ -6,23 +8,23 @@ use crate::spaceship_solution::SpaceshipSolution;
 
 use super::HeadAI;
 
-pub struct StarOnlyAI {
+pub struct StarOnlySparseAI {
     pub allowed_miss: usize,
 }
 
 type V2 = I64Vec2;
 
-impl HeadAI for StarOnlyAI {
+impl HeadAI for StarOnlySparseAI {
     fn solve(&mut self, input: &SpaceshipInput) -> SpaceshipSolution {
-        let (is_star, start_pos, n_stars) = make_field(input);
-        let n_stars_left = if is_star[start_pos.y as usize][start_pos.x as usize] {
+        let (is_star, n_stars) = make_field(input);
+        let n_stars_left = if is_star.contains(&V2::ZERO) {
             n_stars - 1
         } else {
             n_stars
         };
         //print_field(&is_star);
-        let mut visit = vec![vec![false; is_star[0].len()]; is_star.len()];
-        let best_moves = dfs(&is_star, &mut visit, start_pos, V2::ZERO, self.allowed_miss, n_stars_left);
+        let mut visit: HashSet<V2> = HashSet::new();
+        let best_moves = dfs(&is_star, &mut visit, V2::ZERO, V2::ZERO, self.allowed_miss, n_stars_left);
         let best_moves: Vec<char> = best_moves.expect("StarOnly: no solutions found").into_iter().rev().collect();
         SpaceshipSolution {
             moves: best_moves,
@@ -31,37 +33,18 @@ impl HeadAI for StarOnlyAI {
     }
 }
 
-fn detect_field_bounds(input: &SpaceshipInput) -> (i64, i64, i64, i64) {
-    let mut min_x = 0;
-    let mut min_y = 0;
-    let mut max_x = 0;
-    let mut max_y = 0;
+fn make_field(input: &SpaceshipInput) -> (HashSet<V2>, usize) {
+    let mut is_star = HashSet::new();
+    let mut n_stars = 0;
     for pos in &input.poss {
         let x = pos[0];
         let y = pos[1];
-        min_x = min_x.min(x);
-        min_y = min_y.min(y);
-        max_x = max_x.max(x);
-        max_y = max_y.max(y);
-    }
-    (min_x, min_y, max_x, max_y)
-}
-
-fn make_field(input: &SpaceshipInput) -> (Vec<Vec<bool>>, V2, usize) {
-    let (min_x, min_y, max_x, max_y) = detect_field_bounds(input);
-    let size_y = (max_y - min_y + 1) as usize;
-    let size_x = (max_x - min_x + 1) as usize;
-    let mut is_star = vec![vec![false; size_x]; size_y];
-    let mut n_stars = 0;
-    for pos in &input.poss {
-        let x = (pos[0] - min_x) as usize;
-        let y = (pos[1] - min_y) as usize;
-        if !is_star[y][x] {
-            is_star[y][x] = true;
+        if !is_star.contains(&V2::new(x, y)) {
+            is_star.insert(V2::new(x, y));
             n_stars += 1;
         }
     }
-    (is_star, V2::new(-min_x, -min_y), n_stars)
+    (is_star, n_stars)
 }
 
 #[allow(dead_code)]
@@ -74,13 +57,6 @@ fn print_field(is_star: &[Vec<bool>]) {
     }
 }
 
-fn is_in_field<T>(field: &[Vec<T>], p: V2) -> bool {
-    (0 <= p.y)
-        && ((p.y as usize) < field.len())
-        && (0 <= p.x)
-        && ((p.x as usize) < field[p.y as usize].len())
-}
-
 fn to_move(dx: i64, dy: i64) -> char {
     //    -1 0 1
     // -1  1 2 3
@@ -90,8 +66,8 @@ fn to_move(dx: i64, dy: i64) -> char {
 }
 
 fn dfs(
-    is_star: &[Vec<bool>],
-    visit: &mut [Vec<bool>],
+    is_star: &HashSet<V2>,
+    visit: &mut HashSet<V2>,
     p: V2, v: V2,
     allowed_miss: usize,
     n_stars_left: usize,
@@ -109,11 +85,8 @@ fn dfs(
         for dx in -1..=1 {
             let nv = v + V2::new(dx, dy);
             let np = p + nv;
-            if !is_in_field(is_star, np) {
-                continue;
-            }
             let mut miss = 0;
-            if !is_star[np.y as usize][np.x as usize] {
+            if !is_star.contains(&np) {
                 if allowed_miss > 0 {
                     // 星じゃない場所を踏むことを許す
                     miss = 1;
@@ -121,10 +94,10 @@ fn dfs(
                     continue;
                 }
             }
-            if visit[np.y as usize][np.x as usize] {
+            if visit.contains(&np) {
                 continue;
             }
-            visit[np.y as usize][np.x as usize] = true;
+            visit.insert(np);
             if let Some(mut moves) = dfs(
                 is_star, visit,
                 np, nv,
@@ -145,7 +118,7 @@ fn dfs(
                     };
                 }
             }
-            visit[np.y as usize][np.x as usize] = false;
+            visit.remove(&np);
         }
     }
     best_moves

@@ -99,6 +99,9 @@ fn parse_ai_string(
         "StarOnly" => Box::new(ai::StarOnlyAI {
             allowed_miss: opt.staronly_allowed_miss,
         }),
+        "StarOnlySparse" => Box::new(ai::StarOnlySparseAI {
+            allowed_miss: opt.staronly_allowed_miss,
+        }),
         x => bail!("'{x}' is not a HeadAI"),
     };
     let mut chained_ais = vec![];

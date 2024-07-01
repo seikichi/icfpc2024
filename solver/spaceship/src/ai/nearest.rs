@@ -1,7 +1,7 @@
 use std::collections::{HashSet, VecDeque};
 
 use glam::I64Vec2;
-use log::debug;
+use log::{debug, info};
 
 use crate::spaceship_input::SpaceshipInput;
 use crate::spaceship_solution::SpaceshipSolution;
@@ -74,8 +74,9 @@ fn doit(
     let mut visit: HashSet<V2> = HashSet::new();
     let mut current_miss = 0;
     while visit.len() < stars.len() {
-        // 現在の座標からもっともユークリット距離が近い星に行く
+        info!("p={}, v={}, miss={}, cost={}, stars_visit={}", state.p, state.v, current_miss, path.len(), visit.len());
 
+        // 現在の座標からもっともユークリット距離が近い星に行く
         let mut min_dist = 10000000;
         let mut target = V2::ZERO;
         for star in stars {

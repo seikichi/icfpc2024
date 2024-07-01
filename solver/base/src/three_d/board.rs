@@ -12,7 +12,7 @@ pub struct Board {
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Cell {
     Empty,
-    Integer(i64),
+    Integer(i128),
     Right,
     Down,
     Left,
@@ -29,7 +29,7 @@ pub enum Cell {
 }
 
 impl Board {
-    pub fn new(input: &ThreeDInput, a: i64, b: i64) -> Self {
+    pub fn new(input: &ThreeDInput, a: i128, b: i128) -> Self {
         let h = input.field.len();
         let w = input.field[0].len();
         let mut field = vec![vec![Cell::Empty; w]; h];
@@ -54,7 +54,7 @@ impl Board {
                     "A" => Cell::Integer(a),
                     "B" => Cell::Integer(b),
                     _ => {
-                        if let Ok(v) = s.parse::<i64>() {
+                        if let Ok(v) = s.parse::<i128>() {
                             if v < -99 || 99 < v {
                                 panic!("invalid value: {}", s);
                             }

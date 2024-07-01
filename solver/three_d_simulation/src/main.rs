@@ -25,10 +25,10 @@ struct Opt {
     super_quiet: bool,
 
     #[structopt(short = "a")]
-    initial_a: i64,
+    initial_a: i128,
 
     #[structopt(short = "b")]
-    initial_b: i64,
+    initial_b: i128,
 
     #[structopt(short = "t", long = "max-step", default_value = "100")]
     max_step: i64,

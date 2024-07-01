@@ -10,9 +10,10 @@ impl ThreeDInput {
         for y in 0..field.len() {
             if field[y].len() != field[0].len() {
                 panic!(
-                    "invalid field. line width {} is different from first line width {}",
+                    "invalid field. line width {} is different from first line width {}, {:?}",
                     field[y].len(),
-                    field[0].len()
+                    field[0].len(),
+                    field[y]
                 );
             }
         }

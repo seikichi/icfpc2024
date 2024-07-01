@@ -1,11 +1,14 @@
 use glam::I64Vec2;
+use log::debug;
 
 use crate::spaceship_input::SpaceshipInput;
 use crate::spaceship_solution::SpaceshipSolution;
 
 use super::HeadAI;
 
-pub struct StarOnlyAI {}
+pub struct StarOnlyAI {
+    pub allowed_miss: usize,
+}
 
 type V2 = I64Vec2;
 
@@ -19,7 +22,7 @@ impl HeadAI for StarOnlyAI {
         };
         print_field(&is_star);
         let mut visit = vec![vec![false; is_star[0].len()]; is_star.len()];
-        let best_moves = dfs(&is_star, &mut visit, start_pos, V2::ZERO, n_stars_left);
+        let best_moves = dfs(&is_star, &mut visit, start_pos, V2::ZERO, self.allowed_miss, n_stars_left);
         let best_moves: Vec<char> = best_moves.expect("StarOnly: no solutions found").into_iter().rev().collect();
         SpaceshipSolution {
             moves: best_moves,
@@ -85,8 +88,14 @@ fn to_move(dx: i64, dy: i64) -> char {
     (((dy + 1) * 3 + (dx + 1) + 1) as u8 + '0' as u8) as char
 }
 
-fn dfs(is_star: &[Vec<bool>], visit: &mut [Vec<bool>], p: V2, v: V2, n_stars_left: usize) -> Option<Vec<char>> {
-    eprintln!("p={p}, v={v}, n_stars_left={n_stars_left}");
+fn dfs(
+    is_star: &[Vec<bool>],
+    visit: &mut [Vec<bool>],
+    p: V2, v: V2,
+    allowed_miss: usize,
+    n_stars_left: usize,
+) -> Option<Vec<char>> {
+    debug!("p={p}, v={v}, allowed_miss={allowed_miss}, n_stars_left={n_stars_left}");
 
     if n_stars_left == 0 {
         // クリア
@@ -102,14 +111,25 @@ fn dfs(is_star: &[Vec<bool>], visit: &mut [Vec<bool>], p: V2, v: V2, n_stars_lef
             if !is_in_field(is_star, np) {
                 continue;
             }
+            let mut miss = 0;
             if !is_star[np.y as usize][np.x as usize] {
-                continue;
+                if allowed_miss > 0 {
+                    // 星じゃない場所を踏むことを許す
+                    miss = 1;
+                } else {
+                    continue;
+                }
             }
             if visit[np.y as usize][np.x as usize] {
                 continue;
             }
             visit[np.y as usize][np.x as usize] = true;
-            if let Some(mut moves) = dfs(is_star, visit, np, nv, n_stars_left - 1) {
+            if let Some(mut moves) = dfs(
+                is_star, visit,
+                np, nv,
+                allowed_miss - miss,
+                n_stars_left - (1 - miss),
+            ) {
                 moves.push(to_move(dx, dy));
 
                 // update best_moves

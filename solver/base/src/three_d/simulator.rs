@@ -1,11 +1,11 @@
 use super::{
     board::{Board, Cell},
-    three_d_input::{self, ThreeDInput},
+    three_d_input::ThreeDInput,
 };
 use std::collections::{HashMap, HashSet};
 pub struct Simulator {
-    pub a: i64,
-    pub b: i64,
+    pub a: i128,
+    pub b: i128,
     pub max_w: usize,
     pub max_h: usize,
     pub max_t: usize,
@@ -13,7 +13,7 @@ pub struct Simulator {
 }
 
 impl Simulator {
-    pub fn new(input: &ThreeDInput, a: i64, b: i64) -> Self {
+    pub fn new(input: &ThreeDInput, a: i128, b: i128) -> Self {
         let max_h = input.field.len();
         let max_w = input.field[0].len();
         let max_t = 1;
@@ -27,7 +27,7 @@ impl Simulator {
             boards: vec![board],
         }
     }
-    pub fn step(&mut self) -> Option<i64> {
+    pub fn step(&mut self) -> Option<i128> {
         let mut remove_cells: HashSet<(i64, i64)> = HashSet::new();
         let mut add_cells: HashMap<(i64, i64), Cell> = HashMap::new();
         let mut warps = vec![];
@@ -106,7 +106,12 @@ impl Simulator {
                             if let Cell::Integer(dx) = left_cell {
                                 if let Cell::Integer(dy) = right_cell {
                                     if let Cell::Integer(dt) = down_cell {
-                                        warps.push((x as i64 - dx, y as i64 - dy, dt, v));
+                                        warps.push((
+                                            x as i64 - dx as i64,
+                                            y as i64 - dy as i64,
+                                            dt,
+                                            v,
+                                        ));
                                     }
                                 }
                             }
@@ -144,7 +149,7 @@ impl Simulator {
             }
         }
         // check submits
-        let mut submit: Option<i64> = None;
+        let mut submit: Option<i128> = None;
         for y in 0..h {
             for x in 0..w {
                 if field[y][x] != Cell::Submit {
@@ -178,7 +183,7 @@ impl Simulator {
                 panic!("multiple warp dt: {:?}", warps);
             }
             // check same postion consistency
-            let mut dests: HashMap<(i64, i64), i64> = HashMap::new();
+            let mut dests: HashMap<(i64, i64), i128> = HashMap::new();
             for &(x, y, _, v) in warps.iter() {
                 if dests.contains_key(&(x, y)) {
                     // 異なる値の場合だけNG
@@ -250,7 +255,7 @@ fn simulator_step_test() {
   . . .  S .
   1 @ 2  . .
   . 1 .  . .";
-    let input = three_d_input::load_from_str(solution_3d3).unwrap();
+    let input = super::three_d_input::load_from_str(solution_3d3).unwrap();
     let mut simulator = Simulator::new(&input, -11, 0);
     for _t in 0..100 {
         let result = simulator.step();

@@ -1,4 +1,5 @@
 -- packint.rb でパックした整数をもとの文字列に戻す
+-- 各文字を二重に unpack する
 (
   (
     (\f -> f f) (\self -> \code ->

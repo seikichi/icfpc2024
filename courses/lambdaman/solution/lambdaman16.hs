@@ -15,4 +15,4 @@
                 (next d c b a)
             )
     )
-) 6 "LLL" "RRR" "UUU" "DDD"
+) 6 "LL" "RR" "UU" "DD"

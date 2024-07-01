@@ -104,8 +104,6 @@ function renderSquaresToCanvas(
     return;
   }
 
-  console.log({ moves });
-
   // moves を塗る
   ctx.beginPath();
   ctx.strokeStyle = "red";
@@ -129,7 +127,6 @@ function renderSquaresToCanvas(
       (x - minX) * (CELL_SIZE + 1) + CELL_SIZE / 2 + 1,
       (y - minY) * (CELL_SIZE + 1) + CELL_SIZE / 2 + 1
     );
-    console.log({ x, y });
   }
   ctx.stroke();
 }
@@ -193,13 +190,18 @@ export default function Page() {
           if (squares === null) {
             return;
           }
-          const moves = z
-            .string()
-            .parse(reader.result)
-            .trim()
-            .split("")
-            .map((c) => Number(c));
-          renderSquaresToCanvas(squares, canvasRef.current!, moves);
+          try {
+            const moves = z
+              .string()
+              .parse(reader.result)
+              .trim()
+              .split("")
+              .map((c) => Number(c));
+            renderSquaresToCanvas(squares, canvasRef.current!, moves);
+          } catch (e) {
+            console.error(e);
+            setError(e instanceof Error ? e.message : String(e));
+          }
         });
         reader.readAsText(file);
       })();
@@ -230,14 +232,34 @@ export default function Page() {
             ))}
         </select>
 
+        {level !== "" && (
+          <div>
+            Previous Experiments:{" "}
+            <a
+              target="_blank"
+              href={`/courses/spaceship/levels/${level}`}
+              rel="noopener noreferrer"
+            >
+              spaceship{level}
+            </a>
+          </div>
+        )}
         {squares !== null && (
-          <input
-            onChange={onFileChange}
-            style={{ width: "100%", marginTop: "4px" }}
-            type="file"
-          />
+          <div>
+            <input
+              onChange={onFileChange}
+              style={{ width: "100%", marginTop: "4px" }}
+              type="file"
+            />
+          </div>
         )}
       </section>
+
+      {error && (
+        <div>
+          <code style={{ backgroundColor: "pink" }}>{error}</code>
+        </div>
+      )}
 
       <section>
         <div>

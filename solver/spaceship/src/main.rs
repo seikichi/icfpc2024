@@ -92,6 +92,7 @@ fn parse_ai_string(
         //     path: opt.load_path.clone(),
         // }),
         "Simple" => Box::new(ai::SimpleHeadAI {}),
+        "StarOnly" => Box::new(ai::StarOnlyAI {}),
         x => bail!("'{x}' is not a HeadAI"),
     };
     let mut chained_ais = vec![];

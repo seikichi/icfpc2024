@@ -1,7 +1,6 @@
 use std::collections::{BinaryHeap, HashSet};
 
 use glam::I64Vec2;
-use log::debug;
 use log::info;
 
 use crate::spaceship_input::SpaceshipInput;
@@ -11,6 +10,7 @@ use super::HeadAI;
 
 pub struct AStarOnlyAI {
     pub allowed_miss: usize,
+    pub max_diff_star: usize,
 }
 
 type V2 = I64Vec2;
@@ -24,7 +24,12 @@ impl HeadAI for AStarOnlyAI {
             n_stars
         };
         //print_field(&stars);
-        let best_moves = astar(&stars, self.allowed_miss, n_stars_left as i64);
+        let best_moves = astar(
+            &stars,
+            self.allowed_miss,
+            self.max_diff_star,
+            n_stars_left as i64,
+        );
         SpaceshipSolution {
             moves: best_moves.expect("AStarOnly: no solutions found"),
             order: vec![],
@@ -158,7 +163,12 @@ fn heuristic(stars: &HashSet<V2>, p: V2, v: V2, visit: &im_rc::HashSet<V2>, left
     ret + left_star - 1
 }
 
-fn astar(stars: &HashSet<V2>, allowed_miss: usize, n_stars_left: i64) -> Option<Vec<char>> {
+fn astar(
+    stars: &HashSet<V2>,
+    allowed_miss: usize,
+    max_diff_star: usize,
+    n_stars_left: i64,
+) -> Option<Vec<char>> {
     info!("star_left: {}", n_stars_left);
     let mut queue: BinaryHeap<State> = BinaryHeap::new();
     queue.push(State {
@@ -172,11 +182,19 @@ fn astar(stars: &HashSet<V2>, allowed_miss: usize, n_stars_left: i64) -> Option<
     });
 
     let mut max_visit_star = 0;
+    // let mut iter = 0;
     while let Some(state) = queue.pop() {
+        // iter += 1;
         if n_stars_left + state.miss == state.visit.len() as i64 {
             // クリア
             return Some(state.moves);
         }
+        if max_visit_star - state.visit_star() > max_diff_star as i64 {
+            continue;
+        }
+        // if iter % 1000 == 0 {
+        //     info!("{:?}", state);
+        // }
         if state.visit_star() > max_visit_star {
             max_visit_star = state.visit_star();
             info!(
@@ -192,7 +210,7 @@ fn astar(stars: &HashSet<V2>, allowed_miss: usize, n_stars_left: i64) -> Option<
             // }
         }
 
-        // 状態(p, v)から遷移可能な状態をすべてバックトラックで探索する
+        // 状態(p, v)から遷移可能な状態をすべて探索する
         for dy in -1..=1 {
             for dx in -1..=1 {
                 let nv = state.v + V2::new(dx, dy);

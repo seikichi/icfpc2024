@@ -44,6 +44,9 @@ struct Opt {
 
     #[structopt(long = "staronly-allowed-miss", default_value = "0")]
     staronly_allowed_miss: usize,
+
+    #[structopt(long = "staronly-max-diff-star", default_value = "3")]
+    staronly_max_diff_star: usize,
     // #[structopt(short = "p", default_value = "500.0", help = "prune threshold")]
     // prune_threshold: f32,
     // #[structopt(long = "annealing-swap-ratio", default_value = "30.0")]
@@ -100,6 +103,7 @@ fn parse_ai_string(
         }),
         "AStarOnly" => Box::new(ai::AStarOnlyAI {
             allowed_miss: opt.staronly_allowed_miss,
+            max_diff_star: opt.staronly_max_diff_star,
         }),
         "StarOnlySparse" => Box::new(ai::StarOnlySparseAI {
             allowed_miss: opt.staronly_allowed_miss,

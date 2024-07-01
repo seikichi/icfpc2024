@@ -5,12 +5,13 @@
         if order == 0 then
             ""
         else
-            let next = self self (order - 1) in (
+            let next = self self (order - 1) in
+            let nextabcd = (next a b c d) in (
                 (next c d a b) .
                 d .
-                (next a b c d) .
+                nextabcd .
                 b .
-                (next a b c d) .
+                nextabcd .
                 c .
                 (next d c b a)
             )

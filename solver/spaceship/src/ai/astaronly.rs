@@ -111,12 +111,14 @@ impl Ord for State {
 
 fn approx1d(px: i64, mut vx: i64, starx: i64) -> i64 {
     let mut dx = starx - px;
+    let mut cnt = 0;
     if dx < 0 {
         dx *= -1;
         vx *= -1;
     }
     if vx < 0 {
         dx += vx.abs() * (vx.abs() - 1) / 2;
+        cnt += -vx;
         vx = 0;
     }
     // 1: v+1
@@ -131,25 +133,29 @@ fn approx1d(px: i64, mut vx: i64, starx: i64) -> i64 {
     let n = f64::ceil(
         (f64::sqrt((4 * vx * vx + 4 * vx + 8 * dx + 1) as f64) - 2.0 * (vx as f64) - 1.0) * 0.5,
     ) as i64;
-    return n;
+    return n + cnt;
 }
 
 // 与えられた点から指定した星に何手でたどり着けるか
 fn approx2d(p: V2, v: V2, star: V2) -> i64 {
     let c1 = approx1d(p.x, v.x, star.x);
     let c2 = approx1d(p.y, v.y, star.y);
+    assert!(c1 > 0 || c2 > 0);
     return std::cmp::max(c1, c2);
 }
 
 // 与えられた点から任意の未到達の星に何手でたどり着けるか
 fn heuristic(stars: &HashSet<V2>, p: V2, v: V2, visit: &im_rc::HashSet<V2>, left_star: i64) -> i64 {
+    if left_star == 0 {
+        return 0;
+    }
     let mut ret = 1 << 30;
     for star in stars {
         if !visit.contains(star) {
             ret = std::cmp::min(ret, approx2d(p, v, *star));
         }
     }
-    ret + left_star
+    ret + left_star - 1
 }
 
 fn astar(stars: &HashSet<V2>, allowed_miss: usize, n_stars_left: i64) -> Option<Vec<char>> {
@@ -174,11 +180,16 @@ fn astar(stars: &HashSet<V2>, allowed_miss: usize, n_stars_left: i64) -> Option<
         if state.visit_star() > max_visit_star {
             max_visit_star = state.visit_star();
             info!(
-                "f: {} get: {} miss: {}",
+                "f: {} get: {} miss: {}, p: {}, v: {}",
                 state.f,
                 state.visit_star(),
-                state.miss
+                state.miss,
+                state.p,
+                state.v
             );
+            // if state.f > 5 {
+            //     info!("{:?} {:?}", state, queue);
+            // }
         }
 
         // 状態(p, v)から遷移可能な状態をすべてバックトラックで探索する
@@ -223,9 +234,11 @@ fn approx1d_test() {
     let c = approx1d(0, 3, 10);
     assert_eq!(c, 3);
     let c = approx1d(0, -2, 10);
-    assert_eq!(c, 5);
+    assert_eq!(c, 7);
     let c = approx1d(10, 3, 20);
     assert_eq!(c, 3);
     let c = approx1d(-10, 3, -20);
-    assert_eq!(c, 5);
+    assert_eq!(c, 8);
+    let c = approx1d(-1, -1, 1);
+    assert_eq!(c, 3);
 }
